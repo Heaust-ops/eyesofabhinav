@@ -1,23 +1,31 @@
 import Base from "./lib/base";
 import CharacterController from "./lib/CharacterController";
+import gsap from "gsap";
+
+Array.prototype.swap = function (x, y) {
+  var b = this[x];
+  this[x] = this[y];
+  this[y] = b;
+  return this;
+};
 
 const base = new Base({
-  ambientLight: 0x707070,
+  ambientLight: window.innerWidth > 1000 ? 0x020202 : 0xffffff,
   customInitFunc: (parent) => {
     // Custom Init Function
     if (parent) parent._shadowMapResolution = [512, 512];
+    parent._ambientLight.intensity = window.innerWidth > 1000 ? 1 : 2;
   },
   debug: true,
 });
 base.frameRateDisplay();
-
 // Create Room
 
 let floor = base.addShape(
   "Plane",
   {
     dimensions: [230, 230],
-    segments: [200, 200],
+    segments: window.innerWidth > 1000 ? [200, 200] : [1, 1],
   },
   {
     texturesPath: "./resources/textures/hexa_wood_tiles_01",
@@ -35,9 +43,9 @@ let floor = base.addShape(
 let roof = base.addShape(
   "Plane",
   {
-    dimensions: [300, 300],
+    dimensions: [230, 230],
     pos: [0, 49, 0],
-    segments: [600, 600],
+    segments: window.innerWidth > 1000 ? [200, 200] : [1, 1],
   },
   {
     color: "#a48163",
@@ -72,7 +80,7 @@ let wall1 = base.addShape(
   "Plane",
   {
     dimensions: [300, 50],
-    segments: [900, 30],
+    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
     pos: [0, 25, 115],
     rotation: [0, -Math.PI, 0],
     castShadow: false,
@@ -85,7 +93,7 @@ let wall2 = base.addShape(
   "Plane",
   {
     dimensions: [300, 50],
-    segments: [900, 30],
+    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
     pos: [0, 25, -115],
     rotation: [0, 0, 0],
     castShadow: false,
@@ -98,7 +106,7 @@ let wall3 = base.addShape(
   "Plane",
   {
     dimensions: [300, 50],
-    segments: [900, 30],
+    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
     pos: [115, 25, 0],
     rotation: [0, -Math.PI / 2, 0],
     castShadow: false,
@@ -111,7 +119,7 @@ let wall4 = base.addShape(
   "Plane",
   {
     dimensions: [300, 50],
-    segments: [900, 30],
+    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
     pos: [-115, 25, 0],
     rotation: [0, Math.PI / 2, 0],
     castShadow: false,
@@ -165,6 +173,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall1[1] }
     )
@@ -181,6 +190,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall1[0] }
     )
@@ -198,6 +208,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall2[1] }
     )
@@ -214,6 +225,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall2[0] }
     )
@@ -231,6 +243,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall3[1] }
     )
@@ -247,6 +260,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall3[0] }
     )
@@ -264,6 +278,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall4[1] }
     )
@@ -280,6 +295,7 @@ for (let i = 0; i < 6; i++) {
       {
         map: "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
         lightMap: "./resources/textures/white_box.png",
+        lightMapIntensity: 2.0,
       },
       { debugName: "panel" + (i + 1), debugFolder: panelsDebugFolders.wall4[0] }
     )
@@ -287,15 +303,6 @@ for (let i = 0; i < 6; i++) {
 }
 
 // END Create Photo Panels
-
-base.skybox([
-  "./resources/skyboxes/skybox_px.jpg",
-  "./resources/skyboxes/skybox_nx.jpg",
-  "./resources/skyboxes/skybox_py.jpg",
-  "./resources/skyboxes/skybox_ny.jpg",
-  "./resources/skyboxes/skybox_pz.jpg",
-  "./resources/skyboxes/skybox_nz.jpg",
-]);
 
 // Create MC | Bind Camera
 const model = base.loadAnimatedFBXModel({
@@ -331,7 +338,7 @@ const lanternsFolder = base.addDebugFolder("lanterns");
 const makeLanterChandelier01 = (x, z, intensity = 50, color = 0xffffff) => {
   const folder = base.addDebugFolder(`lantern (${x}, ${z})`, lanternsFolder);
   const model = base.loadGLTFModel(
-    "./resources/static_models/lantern_chandelier_02/lantern_chandelier_01_1k.glb",
+    "./resources/static_models/lantern_chandelier_01/lantern_chandelier_01_1k.glb",
     [x, 49, z],
     20,
     {
@@ -339,21 +346,24 @@ const makeLanterChandelier01 = (x, z, intensity = 50, color = 0xffffff) => {
       debugName: "gltfmodel",
     }
   );
-  const pointLight = base.addPointLight(
-    {
-      color: 0xffffff,
-      intensity: 50,
-      decay: 1,
-      pos: [x, 38.5, z],
-      shadow: false,
-    },
-    {
-      debugFolder: folder,
-      debugName: "pointLight",
-    }
-  );
+  const pointLight =
+    window.innerWidth > 1000
+      ? base.addPointLight(
+          {
+            color: 0xffffff,
+            intensity: 50,
+            decay: 1,
+            pos: [x, 38.5, z],
+            shadow: false,
+          },
+          {
+            debugFolder: folder,
+            debugName: "pointLight",
+          }
+        )
+      : undefined;
 
-  return [model, pointLight];
+  return [model, pointLight ? pointLight : undefined];
 };
 const lanternChanRadius = 50;
 let lantern1 = makeLanterChandelier01(lanternChanRadius, lanternChanRadius);
@@ -363,11 +373,89 @@ let lantern4 = makeLanterChandelier01(-lanternChanRadius, -lanternChanRadius);
 
 // END Create Chandeliers
 
+let panelChanging = false;
+const change_panel = (
+  property,
+  inAxis,
+  axisSign,
+  goingUpOrDown,
+  duration = 1
+) => {
+  gsap.to(property, {
+    keyframes: [
+      {
+        duration,
+        [inAxis]:
+          goingUpOrDown.toLowerCase() == "up"
+            ? ~~`${axisSign}105`
+            : ~~`${axisSign}95`,
+      },
+      {
+        duration,
+        y: goingUpOrDown.toLowerCase() == "up" ? 37.4 : 12.6,
+      },
+      {
+        duration,
+        [inAxis]: ~~`${axisSign}114.6`,
+      },
+    ],
+  });
+};
+
+// Event Handling
+
 document.addEventListener(
   "keydown",
   (e) => {
     if (e.key == "f") {
-      base.frameRateDisplay();
+      base.frameRateDisplay("toggle", false);
+    }
+  },
+  false
+);
+
+document.addEventListener(
+  "keydown",
+  async (e) => {
+    if (e.key == "ArrowUp" && !panelChanging) {
+      panelChanging = true;
+      const duration = 3;
+      // Swapping Panels
+      // Wall 1
+      panels.wall1[1].forEach((panel, i) => {
+        change_panel(panel.position, "z", "+", "down");
+      });
+      panels.wall1[0].forEach((panel, i) => {
+        change_panel(panel.position, "z", "+", "up");
+      });
+      panels.wall1.swap(0, 1);
+      // Wall 2
+      panels.wall2[1].forEach((panel, i) => {
+        change_panel(panel.position, "z", "-", "down");
+      });
+      panels.wall2[0].forEach((panel, i) => {
+        change_panel(panel.position, "z", "-", "up");
+      });
+      panels.wall2.swap(0, 1);
+      await new Promise((r) => setTimeout(r, duration * 1000));
+      // Wall 3
+      panels.wall3[1].forEach((panel, i) => {
+        change_panel(panel.position, "x", "+", "down");
+      });
+      panels.wall3[0].forEach((panel, i) => {
+        change_panel(panel.position, "x", "+", "up");
+      });
+      panels.wall3.swap(0, 1);
+      // Wall 4
+      panels.wall4[1].forEach((panel, i) => {
+        change_panel(panel.position, "x", "-", "down");
+      });
+      panels.wall4[0].forEach((panel, i) => {
+        change_panel(panel.position, "x", "-", "up");
+      });
+      panels.wall4.swap(0, 1);
+      await new Promise((r) => setTimeout(r, duration * 1000));
+      panelChanging = false;
     }
   },
   false

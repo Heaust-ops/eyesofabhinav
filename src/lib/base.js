@@ -17,12 +17,15 @@ class Base {
 
   _Initialize({ ambientLight, customInitFunc, debug } = {}) {
     this._renderer = new THREE.WebGLRenderer();
-    this._renderer.shadowMap.enabled = true;
+    this._renderer.shadowMap.enabled = false;
     this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this._shadowMapResolution = [2048, 2048];
     this._renderer.setPixelRatio(window.devicePixelRatio);
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._renderer.physicallyCorrectLights = true;
+
+    this._renderer.domElement.setAttribute('id', 'three-canvas');
+    this._renderer.domElement.style.zIndex = "-1";
 
     document.body.appendChild(this._renderer.domElement);
     this._aspect = "w/h";
@@ -38,8 +41,8 @@ class Base {
     this._scene = new THREE.Scene();
     this._animations = [];
 
-    const light = new THREE.AmbientLight(ambientLight);
-    this._scene.add(light);
+    this._ambientLight = new THREE.AmbientLight(ambientLight);
+    this._scene.add(this._ambientLight);
     this._mixers = [];
     this._steps = [];
     this._attrs = [];
@@ -77,7 +80,7 @@ class Base {
   }
 
   addDebugFolder(name = "generic" + this.random(0, 10000), parent = this._gui) {
-     if (this._debug) return parent.addFolder(name);
+    if (this._debug) return parent.addFolder(name);
   }
 
   _debugBasicMesh({
@@ -297,6 +300,7 @@ class Base {
     light.shadow.camera.top = 200;
     light.shadow.camera.bottom = -200;
     this._scene.add(light);
+    this._scene.add(light.target);
     if (this._debug && helper) {
       const helper = new THREE.DirectionalLightHelper(light, 5);
       this._scene.add(helper);
@@ -1137,8 +1141,10 @@ class Base {
     this._steps.splice(id, 1);
   }
 
-  frameRateDisplay(toggle = "toggle") {
+  frameRateDisplay(toggle = "toggle", pause = true) {
     const frameratestep = (t) => {
+      if (!pause && Math.floor(Date.now() / 1000) % 1 == 0)
+        this._frameRateDisplay.innerHTML = "frame rate: " + Math.floor(1 / t);
       if (Math.floor(Date.now() / 1000) % 2 == 0)
         this._frameRateDisplay.innerHTML = "frame rate: " + Math.floor(1 / t);
     };

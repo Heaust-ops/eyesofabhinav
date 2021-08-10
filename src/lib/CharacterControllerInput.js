@@ -1,3 +1,5 @@
+import nipplejs from "nipplejs";
+
 class CharacterControllerProxy {
   constructor(animations) {
     this._animations = animations;
@@ -6,7 +8,7 @@ class CharacterControllerProxy {
   get animations() {
     return this._animations;
   }
-};
+}
 
 class CharacterControllerInput {
   constructor() {
@@ -14,6 +16,54 @@ class CharacterControllerInput {
   }
 
   _Init() {
+    if (window.innerWidth <= 1000) {
+
+
+      // Nipple Joystick
+      const options = {
+        zone: document.getElementById('nipple-container'),
+        threshold:0.2,
+        color: "blue",
+        dynamic: true,
+      };
+      let manager = nipplejs.create(options);
+      manager.on("move", (e, data) => {
+        if (data.raw.distance > 49) {
+          this._keys.shift = true;
+        } else {
+          this._keys.shift = false;
+        }
+      });
+      manager.on("plain:up", (e, data) => {
+        this._keys.backward = false;
+        this._keys.forward = true;
+      });
+      manager.on("plain:down", (e, data) => {
+        this._keys.forward = false;
+        this._keys.backward = true;
+      });
+
+      manager.on("dir:up dir:down", (e, data) => {
+        this._keys.left = false;
+        this._keys.right = false;
+      });
+
+      manager.on("dir:right", (e, data) => {
+        this._keys.left = false;
+        this._keys.right = true;
+      });
+      manager.on("dir:left", (e, data) => {
+        this._keys.right = false;
+        this._keys.left = true;
+      });
+
+      manager.on("end", (e, data) => {
+        this._keys.forward = false;
+        this._keys.backward = false;
+        this._keys.left = false;
+        this._keys.right = false;
+      });
+    }
     this._keys = {
       forward: false,
       backward: false,
