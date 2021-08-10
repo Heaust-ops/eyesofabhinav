@@ -21,10 +21,8 @@ class CharacterControllerInput {
 
       // Nipple Joystick
       const options = {
-        zone: document.getElementById('nipple-container'),
         threshold:0.2,
-        color: "blue",
-        dynamic: true,
+        color: "gray",
       };
       let manager = nipplejs.create(options);
       manager.on("move", (e, data) => {
