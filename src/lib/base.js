@@ -3,8 +3,10 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import TPPCamera from "./TPPCamera";
-import * as dat from "dat.gui";
-import gsap from "gsap";
+import prepareGeometry from "./PrepareGeometry";
+import prepareStandardMaterial from "./PrepareStandardMaterial";
+import Debug from "./DebugBasicMesh";
+// import { Text } from "troika-three-text";
 
 class Base {
   constructor({
@@ -17,14 +19,20 @@ class Base {
 
   _Initialize({ ambientLight, customInitFunc, debug } = {}) {
     this._renderer = new THREE.WebGLRenderer();
-    this._renderer.shadowMap.enabled = false;
+    this._renderer.shadowMap.enabled = window.innerWidth > 1000 ? true : false;
     this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this._shadowMapResolution = [2048, 2048];
+    this.enableAverageFrameRateCalculation = false;
     this._renderer.setPixelRatio(window.devicePixelRatio);
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._renderer.physicallyCorrectLights = true;
+    this._gltfLoader = new GLTFLoader();
+    this._textureLoader = new THREE.TextureLoader();
+    this._cubeTextureLoader = new THREE.CubeTextureLoader();
+    this.prepareStandardMaterial = prepareStandardMaterial;
+    this.prepareGeometry = prepareGeometry;
 
-    this._renderer.domElement.setAttribute('id', 'three-canvas');
+    this._renderer.domElement.setAttribute("id", "three-canvas");
     this._renderer.domElement.style.zIndex = "-1";
 
     document.body.appendChild(this._renderer.domElement);
@@ -50,13 +58,39 @@ class Base {
     this._frameRateDisplayContainer = document.getElementById(
       "frame-rate-container"
     );
-    this._textureLoader = new THREE.TextureLoader();
-    this._cubeTextureLoader = new THREE.CubeTextureLoader();
 
     this._debug = debug;
-    if (this._debug) this._gui = new dat.GUI({ width: 600 });
+    if (this._debug) {
+      const debugObject = new Debug();
+      this._debugBasicMesh = debugObject.debugBasicMesh;
+      this._gui = debugObject.gui;
+      this.addDebugFolder = debugObject.addDebugFolder;
+    } else {
+      this.addDebugFolder = () => {};
+    }
 
     if (customInitFunc) customInitFunc(this);
+
+    if (this.enableAverageFrameRateCalculation) {
+      this.localFrameRateAverage = 60;
+      this._localFrameRateNumerator = 0;
+      this._localFrameRateDenominator = 1;
+      this._localFrameRateTimeElapsed = 0;
+      this.addStep((t, parent) => {
+        if (t) {
+          parent._localFrameRateTimeElapsed += t;
+          parent._localFrameRateNumerator += 1 / t;
+          parent.localFrameRateAverage =
+            parent._localFrameRateNumerator / parent._localFrameRateDenominator;
+          parent._localFrameRateDenominator++;
+          if (parent._localFrameRateTimeElapsed > 9) {
+            parent._localFrameRateNumerator = 0;
+            parent._localFrameRateDenominator = 1;
+            parent._localFrameRateTimeElapsed = 0;
+          }
+        }
+      });
+    }
 
     this._RAF();
   }
@@ -79,119 +113,57 @@ class Base {
     };
   }
 
-  addDebugFolder(name = "generic" + this.random(0, 10000), parent = this._gui) {
-    if (this._debug) return parent.addFolder(name);
+  get scene() {
+    return this._scene;
   }
 
-  _debugBasicMesh({
-    debugMesh = false,
-    debug = true,
-    color = "#223344",
-    debugName = "genericMesh" + this.random(0, 10000),
-    debugPosMin = [-150, -150, -150],
-    debugPosMax = [150, 150, 150],
-    debugRotMin = [-Math.PI, -Math.PI, -Math.PI],
-    debugRotMax = [Math.PI, Math.PI, Math.PI],
-    debugPosStep = 0.01,
-    debugRotStep = 0.01,
-    debugMinSize = -5,
-    debugMaxSize = 5,
-    debugFolder = this._gui,
-  } = {}) {
-    if (debug && this._debug && debugMesh) {
-      const folder = debugFolder.addFolder(debugName);
-      const parameters = {
-        color,
-        scale: 1,
-        spinX: () => {
-          gsap.to(debugMesh.rotation, {
-            duration: 1,
-            x: debugMesh.rotation.x + Math.PI * 2,
-          });
-        },
-        spinY: () => {
-          gsap.to(debugMesh.rotation, {
-            duration: 1,
-            y: debugMesh.rotation.y + Math.PI * 2,
-          });
-        },
-        spinZ: () => {
-          gsap.to(debugMesh.rotation, {
-            duration: 1,
-            z: debugMesh.rotation.z + Math.PI * 2,
-          });
-        },
-      };
-      folder
-        .add(debugMesh.position, "x")
-        .min(debugPosMin[0])
-        .max(debugPosMax[0])
-        .step(
-          debugPosStep.constructor === Array ? debugPosStep[0] : debugPosStep
-        )
-        .name("pos-x");
-      folder
-        .add(debugMesh.position, "y")
-        .min(debugPosMin[1])
-        .max(debugPosMax[1])
-        .step(
-          debugPosStep.constructor === Array ? debugPosStep[1] : debugPosStep
-        )
-        .name("pos-y");
-      folder
-        .add(debugMesh.position, "z")
-        .min(debugPosMin[2])
-        .max(debugPosMax[2])
-        .step(
-          debugPosStep.constructor === Array ? debugPosStep[2] : debugPosStep
-        )
-        .name("pos-z");
-      folder
-        .add(debugMesh.rotation, "x")
-        .min(debugRotMin[0])
-        .max(debugRotMax[0])
-        .step(
-          debugRotStep.constructor === Array ? debugRotStep[0] : debugRotStep
-        )
-        .name("rot-x");
-      folder
-        .add(debugMesh.rotation, "y")
-        .min(debugRotMin[1])
-        .max(debugRotMax[1])
-        .step(
-          debugRotStep.constructor === Array ? debugRotStep[1] : debugRotStep
-        )
-        .name("rot-y");
-      folder
-        .add(debugMesh.rotation, "z")
-        .min(debugRotMin[2])
-        .max(debugRotMax[2])
-        .step(
-          debugRotStep.constructor === Array ? debugRotStep[2] : debugRotStep
-        )
-        .name("rot-z");
-      folder
-        .add(parameters, "scale")
-        .min(debugMinSize)
-        .max(debugMaxSize)
-        .step(0.01)
-        .onChange(() => {
-          debugMesh.scale.x = parameters.scale;
-          debugMesh.scale.y = parameters.scale;
-          debugMesh.scale.z = parameters.scale;
-        })
-        .name("size");
-      folder.add(debugMesh, "visible");
-      if (debugMesh.material) folder.add(debugMesh.material, "wireframe");
-      folder.add(parameters, "spinX");
-      folder.add(parameters, "spinY");
-      folder.add(parameters, "spinZ");
-      if (debugMesh.material)
-        folder.addColor(parameters, "color").onChange(() => {
-          debugMesh.material.color.set(parameters.color);
-        });
-    }
-  }
+  // addText(
+  //   text,
+  //   {
+  //     position = [0, 10, 0],
+  //     rotation = [0, 0, 0],
+  //     fontSize = 0.5,
+  //     color = 0x9966ff,
+  //   } = {},
+  //   {
+  //     debug = true,
+  //     debugName = "genericText" + this.random(0, 10000),
+  //     debugPosMin = [-150, -150, -150],
+  //     debugPosMax = [150, 150, 150],
+  //     debugRotMin = [-Math.PI, -Math.PI, -Math.PI],
+  //     debugRotMax = [Math.PI, Math.PI, Math.PI],
+  //     debugPosStep = 0.01,
+  //     debugRotStep = 0.01,
+  //     debugFolder = this._gui,
+  //   } = {}
+  // ) {
+  //   const newText = new Text();
+  //   newText.text = text;
+  //   newText.color = color;
+  //   newText.fontSize = fontSize;
+  //   newText.position.set(...position);
+  //   newText.rotation.set(...rotation);
+  //   this._scene.add(newText);
+
+  //   // Debug
+  //   this._debugBasicMesh({
+  //     debugMesh: newText,
+  //     debug,
+  //     color,
+  //     debugName,
+  //     debugPosMin,
+  //     debugPosMax,
+  //     debugRotMin,
+  //     debugRotMax,
+  //     debugPosStep,
+  //     debugRotStep,
+  //     debugFolder,
+  //   });
+  // }
+
+
+
+
 
   random(min, max) {
     // min and max included
@@ -307,19 +279,21 @@ class Base {
     }
 
     // Debug
-    this._debugBasicMesh({
-      debugMesh: light,
-      debug,
-      color,
-      debugName,
-      debugPosMin,
-      debugPosMax,
-      debugRotMin,
-      debugRotMax,
-      debugPosStep,
-      debugRotStep,
-      debugFolder,
-    });
+    if (this._debug) {
+      this._debugBasicMesh({
+        debugMesh: light,
+        debug,
+        color,
+        debugName,
+        debugPosMin,
+        debugPosMax,
+        debugRotMin,
+        debugRotMax,
+        debugPosStep,
+        debugRotStep,
+        debugFolder,
+      });
+    }
 
     return light;
   }
@@ -370,19 +344,21 @@ class Base {
     }
 
     // Debug
-    this._debugBasicMesh({
-      debugMesh: light,
-      debug,
-      color,
-      debugName,
-      debugPosMin,
-      debugPosMax,
-      debugRotMin,
-      debugRotMax,
-      debugPosStep,
-      debugRotStep,
-      debugFolder,
-    });
+    if (this._debug) {
+      this._debugBasicMesh({
+        debugMesh: light,
+        debug,
+        color,
+        debugName,
+        debugPosMin,
+        debugPosMax,
+        debugRotMin,
+        debugRotMax,
+        debugPosStep,
+        debugRotStep,
+        debugFolder,
+      });
+    }
     return light;
   }
 
@@ -497,318 +473,6 @@ class Base {
     return bufferMesh;
   }
 
-  prepareStandardMaterial({
-    color = 0x808080,
-    side = "front",
-    colorMultiply = false,
-    texturesPath = false,
-    wireframe = false,
-    flatShading = false,
-    repeat = false,
-    refractionRatio = 0.98,
-    /** Color Map */
-    map = false,
-    /** Bump Map */
-    bumpMap = false,
-    bumpScale = 1.0,
-    /** Normal Map */
-    normalMap = false,
-    normalScale = [1, 1],
-    /** Displacement Map */
-    displacementMap = false,
-    displacementScale = 1.0,
-    displacementBias = 0.0,
-    /** Emission, Color and Map */
-    emissiveMap = false,
-    emissiveIntensity = 1.0,
-    emissiveColor = 0x000000,
-    /** Env Map */
-    envMap = false,
-    envMapIntensity = false,
-    /** Light Map */
-    lightMap = false,
-    lightMapIntensity = 1.0,
-    /** Alpha Map */
-    alphaMap = false,
-    /** Ambient Occlusion Map */
-    aoMap = false,
-    aoMapIntensity = 1.0,
-    /** Metalness */
-    metalness = 0.0, // If metalnessMap is also provided, both values are multiplied.
-    metalnessMap = false,
-    /** Roughness */
-    roughness = 1.0, // If roughnessMap is also provided, both values are multiplied.
-    roughnessMap = false,
-    /** Texture Filters */
-    filters = {
-      mag: {
-        map: false,
-        bumpMap: false,
-        normalMap: false,
-      },
-      min: {
-        map: false,
-        bumpMap: false,
-        normalMap: false,
-      },
-    },
-  } = {}) {
-    let material = new THREE.MeshStandardMaterial();
-
-    // Default names for textures
-
-    bumpMap =
-      texturesPath && (bumpMap == "png" || bumpMap == "jpg")
-        ? texturesPath + "/bump." + bumpMap
-        : bumpMap;
-    map =
-      texturesPath && (map == "png" || map == "jpg")
-        ? texturesPath + "/color." + map
-        : map;
-    normalMap =
-      texturesPath && (normalMap == "png" || normalMap == "jpg")
-        ? texturesPath + "/normal." + normalMap
-        : normalMap;
-    displacementMap =
-      texturesPath && (displacementMap == "png" || displacementMap == "jpg")
-        ? texturesPath + "/displacement." + displacementMap
-        : displacementMap;
-    emissiveMap =
-      texturesPath && (emissiveMap == "png" || emissiveMap == "jpg")
-        ? texturesPath + "/emissive." + emissiveMap
-        : emissiveMap;
-    envMap =
-      texturesPath && (envMap == "png" || envMap == "jpg")
-        ? texturesPath + "/env." + envMap
-        : envMap;
-    lightMap =
-      texturesPath && (lightMap == "png" || lightMap == "jpg")
-        ? texturesPath + "/light." + lightMap
-        : lightMap;
-    alphaMap =
-      texturesPath && (alphaMap == "png" || alphaMap == "jpg")
-        ? texturesPath + "/alpha." + alphaMap
-        : alphaMap;
-    aoMap =
-      texturesPath && (aoMap == "png" || aoMap == "jpg")
-        ? texturesPath + "/ao." + aoMap
-        : aoMap;
-    metalnessMap =
-      texturesPath && (metalnessMap == "png" || metalnessMap == "jpg")
-        ? texturesPath + "/metalness." + metalnessMap
-        : metalnessMap;
-    roughnessMap =
-      texturesPath && (roughnessMap == "png" || roughnessMap == "jpg")
-        ? texturesPath + "/roughness." + roughnessMap
-        : roughnessMap;
-
-    /** Applying Textures */
-    if (map) {
-      material.map = this._textureLoader.load(map);
-
-      if (repeat) {
-        material.map.repeat.set(...repeat);
-        material.map.wrapS = THREE.RepeatWrapping;
-        material.map.wrapT = THREE.RepeatWrapping;
-      }
-    } else {
-      material.color = new THREE.Color(color);
-    }
-    if (bumpMap) {
-      material.bumpMap = this._textureLoader.load(bumpMap);
-      material.bumpScale = bumpScale;
-
-      if (repeat) {
-        material.bumpMap.repeat.set(...repeat);
-        material.bumpMap.wrapS = THREE.RepeatWrapping;
-        material.bumpMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (normalMap) {
-      material.normalMap = this._textureLoader.load(normalMap);
-      material.normalScale = new THREE.Vector2(...normalScale);
-
-      if (repeat) {
-        material.normalMap.repeat.set(...repeat);
-        material.normalMap.wrapS = THREE.RepeatWrapping;
-        material.normalMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (displacementMap) {
-      material.displacementMap = this._textureLoader.load(displacementMap);
-      material.displacementScale = displacementScale;
-      material.displacementBias = displacementBias;
-
-      if (repeat) {
-        material.displacementMap.repeat.set(...repeat);
-        material.displacementMap.wrapS = THREE.RepeatWrapping;
-        material.displacementMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (emissiveMap) {
-      material.emissiveMap = this._textureLoader.load(emissiveMap);
-
-      if (repeat) {
-        material.emissiveMap.repeat.set(...repeat);
-        material.emissiveMap.wrapS = THREE.RepeatWrapping;
-        material.emissiveMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (envMap) {
-      material.envMap = this._textureLoader.load(envMap);
-
-      if (repeat) {
-        material.envMap.repeat.set(...repeat);
-        material.envMap.wrapS = THREE.RepeatWrapping;
-        material.envMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (envMapIntensity) {
-      material.envMapIntensity = envMapIntensity;
-    }
-    if (lightMap) {
-      material.lightMap = this._textureLoader.load(lightMap);
-      material.lightMapIntensity = lightMapIntensity;
-
-      if (repeat) {
-        material.lightMap.repeat.set(...repeat);
-        material.lightMap.wrapS = THREE.RepeatWrapping;
-        material.lightMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (alphaMap) {
-      material.alphaMap = this._textureLoader.load(alphaMap);
-
-      if (repeat) {
-        material.alphaMap.repeat.set(...repeat);
-        material.alphaMap.wrapS = THREE.RepeatWrapping;
-        material.alphaMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (aoMap) {
-      material.aoMap = this._textureLoader.load(aoMap);
-      material.aoMapIntensity = aoMapIntensity;
-
-      if (repeat) {
-        material.aoMap.repeat.set(...repeat);
-        material.aoMap.wrapS = THREE.RepeatWrapping;
-        material.aoMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (metalnessMap) {
-      material.metalnessMap = this._textureLoader.load(metalnessMap);
-
-      if (repeat) {
-        material.metalnessMap.repeat.set(...repeat);
-        material.metalnessMap.wrapS = THREE.RepeatWrapping;
-        material.metalnessMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-    if (roughnessMap) {
-      material.roughnessMap = this._textureLoader.load(roughnessMap);
-
-      if (repeat) {
-        material.roughnessMap.repeat.set(...repeat);
-        material.roughnessMap.wrapS = THREE.RepeatWrapping;
-        material.roughnessMap.wrapT = THREE.RepeatWrapping;
-      }
-    }
-
-    material.flatShading = flatShading;
-    material.wireframe = wireframe;
-    material.emissiveIntensity = emissiveIntensity;
-    material.emissiveColor = emissiveColor;
-    material.refractionRatio = refractionRatio;
-    material.metalness = metalness;
-    material.roughness = roughness;
-
-    if (side.toLowerCase() != "front") {
-      if (side.toLowerCase() == "back") material.side = THREE.BackSide;
-      else material.side = THREE.DoubleSide;
-    }
-
-    // Default names for textures
-
-    bumpMap =
-      texturesPath && (bumpMap == "png" || bumpMap == "jpg")
-        ? texturesPath + "/bump." + bumpMap
-        : bumpMap;
-    map =
-      texturesPath && (map == "png" || map == "jpg")
-        ? texturesPath + "/color." + map
-        : map;
-    normalMap =
-      texturesPath && (normalMap == "png" || normalMap == "jpg")
-        ? texturesPath + "/normal." + normalMap
-        : normalMap;
-    displacementMap =
-      texturesPath && (displacementMap == "png" || displacementMap == "jpg")
-        ? texturesPath + "/displacement." + displacementMap
-        : displacementMap;
-    emissiveMap =
-      texturesPath && (emissiveMap == "png" || emissiveMap == "jpg")
-        ? texturesPath + "/emissive." + emissiveMap
-        : emissiveMap;
-    envMap =
-      texturesPath && (envMap == "png" || envMap == "jpg")
-        ? texturesPath + "/env." + envMap
-        : envMap;
-    lightMap =
-      texturesPath && (lightMap == "png" || lightMap == "jpg")
-        ? texturesPath + "/light." + lightMap
-        : lightMap;
-    alphaMap =
-      texturesPath && (alphaMap == "png" || alphaMap == "jpg")
-        ? texturesPath + "/alpha." + alphaMap
-        : alphaMap;
-    aoMap =
-      texturesPath && (aoMap == "png" || aoMap == "jpg")
-        ? texturesPath + "/ao." + aoMap
-        : aoMap;
-    metalnessMap =
-      texturesPath && (metalnessMap == "png" || metalnessMap == "jpg")
-        ? texturesPath + "/metalness." + metalnessMap
-        : metalnessMap;
-    roughnessMap =
-      texturesPath && (roughnessMap == "png" || roughnessMap == "jpg")
-        ? texturesPath + "/roughness." + roughnessMap
-        : roughnessMap;
-
-    /** Applying filters */
-    if (filters.mag) {
-      if (map) {
-        if (filters.mag.map) material.map.magFilter = filters.mag.map;
-      }
-      if (bumpMap) {
-        if (filters.mag.bumpMap)
-          material.bumpMap.magFilter = filters.mag.bumpMap;
-      }
-      if (normalMap) {
-        if (filters.mag.normalMap)
-          material.normalMap.magFilter = filters.mag.normalMap;
-      }
-    }
-    if (filters.min) {
-      if (map) {
-        if (filters.min.map) material.map.minFilter = filters.min.map;
-      }
-      if (bumpMap) {
-        if (filters.min.bumpMap)
-          material.bumpMap.minFilter = filters.min.bumpMap;
-      }
-      if (normalMap) {
-        if (filters.min.normalMap)
-          material.normalMap.minFilter = filters.min.normalMap;
-      }
-    }
-
-    if (colorMultiply) {
-      material.color = new THREE.Color(color);
-    }
-
-    return material;
-  }
-
   /**
    * Adds a Basic Shape to Scene
    *
@@ -828,6 +492,7 @@ class Base {
       rotation = [-Math.PI / 2, 0, 0],
       castShadow = true,
       receiveShadow = true,
+      duplicateUV = false,
     } = {},
     {
       color = 0x808080,
@@ -900,49 +565,7 @@ class Base {
   ) {
     if (!geometry) {
       /** Creating Geometry */
-      let dim;
-      let seg;
-      switch (shape.toLowerCase()) {
-        case "plane":
-          dim = dimensions ? dimensions : [100, 100];
-          seg = segments ? segments : [1, 1];
-          geometry = new THREE.PlaneBufferGeometry(...dim, ...seg);
-          break;
-        case "circle":
-          dim = dimensions ? dimensions : [5];
-          seg = segments ? segments : [32];
-          geometry = new THREE.PlaneBufferGeometry(...dim, ...seg);
-          break;
-        case "cube":
-        case "box":
-          dim = dimensions ? dimensions : [2, 2, 2];
-          seg = segments ? segments : [1, 1, 1];
-          geometry = new THREE.BoxBufferGeometry(...dim, ...seg);
-          break;
-        case "sphere":
-          dim = dimensions ? dimensions : [2];
-          seg = segments ? segments : [32, 32];
-          geometry = new THREE.SphereBufferGeometry(...dim, ...seg);
-          break;
-        case "torus":
-          dim = dimensions ? dimensions : [10, 3];
-          seg = segments ? segments : [16, 100];
-          geometry = new THREE.TorusBufferGeometry(...dim, ...seg);
-          break;
-        case "cone":
-          dim = dimensions ? dimensions : [1, 4];
-          seg = segments ? segments : [8, 1];
-          geometry = new THREE.ConeBufferGeometry(...dim, ...seg);
-          break;
-        case "cylinder":
-          dim = dimensions ? dimensions : [5, 5];
-          seg = segments ? segments : [20, 32];
-          geometry = new THREE.CylinderBufferGeometry(...dim, ...seg);
-          break;
-        default:
-          console.log("Cannot Find the Shape: " + shape);
-          return;
-      }
+      geometry = this.prepareGeometry(shape, dimensions, segments, duplicateUV);
     }
 
     if (!material) {
@@ -993,19 +616,21 @@ class Base {
     /**
      * Debug
      */
-    this._debugBasicMesh({
-      debugMesh: mesh,
-      debug,
-      color,
-      debugName,
-      debugPosMin,
-      debugPosMax,
-      debugRotMin,
-      debugRotMax,
-      debugPosStep,
-      debugRotStep,
-      debugFolder,
-    });
+    if (this._debug) {
+      this._debugBasicMesh({
+        debugMesh: mesh,
+        debug,
+        color,
+        debugName,
+        debugPosMin,
+        debugPosMax,
+        debugRotMin,
+        debugRotMax,
+        debugPosStep,
+        debugRotStep,
+        debugFolder,
+      });
+    }
 
     return mesh;
   }
@@ -1071,7 +696,7 @@ class Base {
     } = {}
   ) {
     const attrKey = this._attrs.length;
-    const loader = new GLTFLoader();
+    const loader = this._gltfLoader;
     loader.load(modelPath, (gltf) => {
       gltf.scene.scale.set(size, size, size);
       gltf.scene.traverse((c) => {
@@ -1080,14 +705,16 @@ class Base {
       gltf.scene.position.copy(new THREE.Vector3(...pos));
       this._scene.add(gltf.scene);
       this._attrs.push(gltf.scene);
-      this._debugBasicMesh({
-        debugMesh: gltf.scene,
-        debugFolder,
-        debug: true,
-        debugName,
-        debugMinSize: size - 10,
-        debugMaxSize: size + 10,
-      });
+      if (this._debug) {
+        this._debugBasicMesh({
+          debugMesh: gltf.scene,
+          debugFolder,
+          debug: true,
+          debugName,
+          debugMinSize: size - 10,
+          debugMaxSize: size + 10,
+        });
+      }
     });
     return attrKey;
   }
@@ -1130,7 +757,7 @@ class Base {
   addStep(f) {
     this._steps.push(f);
     if (f.length < 1) {
-      console.log("Function must contain at require 1 arg: Time Elapsed (s)");
+      console.log("Function must contain at least 1 arg: Time Elapsed (s)");
       console.log("addAnimation may be what you're looking for");
       return;
     }
@@ -1141,12 +768,19 @@ class Base {
     this._steps.splice(id, 1);
   }
 
-  frameRateDisplay(toggle = "toggle", pause = true) {
+  frameRateDisplay(toggle = "toggle", type = "paused") {
     const frameratestep = (t) => {
-      if (!pause && Math.floor(Date.now() / 1000) % 1 == 0)
-        this._frameRateDisplay.innerHTML = "frame rate: " + Math.floor(1 / t);
-      if (Math.floor(Date.now() / 1000) % 2 == 0)
-        this._frameRateDisplay.innerHTML = "frame rate: " + Math.floor(1 / t);
+      switch (type) {
+        case "local average":
+          this._frameRateDisplay.innerHTML =
+            "frame rate: " + Math.floor(this.localFrameRateAverage);
+          break;
+        case "paused":
+        default:
+          if (Math.floor(Date.now() / 1000) % 2 == 0)
+            this._frameRateDisplay.innerHTML =
+              "frame rate: " + Math.floor(1 / t);
+      }
     };
     if (toggle == "toggle") {
       if (this._frameRateDisplayContainer.style.display == "none") {

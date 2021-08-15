@@ -2,6 +2,9 @@ import Base from "./lib/base";
 import CharacterController from "./lib/CharacterController";
 import gsap from "gsap";
 
+const debug = true;
+if (debug) console.time("platform");
+
 Array.prototype.swap = function (x, y) {
   var b = this[x];
   this[x] = this[y];
@@ -10,15 +13,16 @@ Array.prototype.swap = function (x, y) {
 };
 
 const base = new Base({
-  ambientLight: window.innerWidth > 1000 ? 0x020202 : 0xffffff,
+  ambientLight: window.innerWidth > 1000 ? 0xffffff : 0xffffff,
   customInitFunc: (parent) => {
     // Custom Init Function
-    if (parent) parent._shadowMapResolution = [512, 512];
+    parent.enableAverageFrameRateCalculation = false;
+    parent._renderer.shadowMap.enabled = false;
     parent._ambientLight.intensity = window.innerWidth > 1000 ? 1 : 2;
   },
-  debug: true,
+  debug,
 });
-base.frameRateDisplay();
+base.frameRateDisplay("toggle", "paused");
 // Create Room
 
 let floor = base.addShape(
@@ -26,6 +30,7 @@ let floor = base.addShape(
   {
     dimensions: [230, 230],
     segments: window.innerWidth > 1000 ? [200, 200] : [1, 1],
+    duplicateUV: true,
   },
   {
     texturesPath: "./resources/textures/hexa_wood_tiles_01",
@@ -45,7 +50,7 @@ let roof = base.addShape(
   {
     dimensions: [230, 230],
     pos: [0, 49, 0],
-    segments: window.innerWidth > 1000 ? [200, 200] : [1, 1],
+    segments: window.innerWidth > 1000 ? [50, 50] : [1, 1],
   },
   {
     color: "#a48163",
@@ -56,7 +61,7 @@ let roof = base.addShape(
     displacementMap: "png",
     normalMap: "jpg",
     roughnessMap: "jpg",
-    displacementScale: 3.0,
+    displacementScale: 1.0,
     side: "back",
     repeat: [8, 8],
   },
@@ -64,6 +69,11 @@ let roof = base.addShape(
 );
 
 // Create Walls
+const wallGeometry = base.prepareGeometry(
+  "plane",
+  [300, 50],
+  window.innerWidth > 1000 ? [900, 30] : [1, 1]
+);
 const wallTexture = base.prepareStandardMaterial({
   texturesPath: "./resources/textures/wood_wall_coffers_01",
   map: "jpg",
@@ -74,65 +84,45 @@ const wallTexture = base.prepareStandardMaterial({
   displacementScale: 1.0,
   repeat: [1, 1 / 3],
 });
-
 const wallsFolder = base.addDebugFolder("walls");
-let wall1 = base.addShape(
-  "Plane",
-  {
-    dimensions: [300, 50],
-    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
-    pos: [0, 25, 115],
-    rotation: [0, -Math.PI, 0],
-    castShadow: false,
-  },
-  { material: wallTexture },
-  { debugFolder: wallsFolder, debugName: "wall1" }
-);
-
-let wall2 = base.addShape(
-  "Plane",
-  {
-    dimensions: [300, 50],
-    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
-    pos: [0, 25, -115],
-    rotation: [0, 0, 0],
-    castShadow: false,
-  },
-  { material: wallTexture },
-  { debugFolder: wallsFolder, debugName: "wall2" }
-);
-
-let wall3 = base.addShape(
-  "Plane",
-  {
-    dimensions: [300, 50],
-    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
-    pos: [115, 25, 0],
-    rotation: [0, -Math.PI / 2, 0],
-    castShadow: false,
-  },
-  { material: wallTexture },
-  { debugFolder: wallsFolder, debugName: "wall3" }
-);
-
-let wall4 = base.addShape(
-  "Plane",
-  {
-    dimensions: [300, 50],
-    segments: window.innerWidth > 1000 ? [900, 30] : [1, 1],
-    pos: [-115, 25, 0],
-    rotation: [0, Math.PI / 2, 0],
-    castShadow: false,
-  },
-  { material: wallTexture },
-  { debugFolder: wallsFolder, debugName: "wall4" }
-);
-
+const makeWall = (pos, rotation, debugName) => {
+  return base.addShape(
+    "Plane",
+    {
+      geometry: wallGeometry,
+      pos,
+      rotation,
+      castShadow: false,
+    },
+    { material: wallTexture },
+    { debugFolder: wallsFolder, debugName }
+  );
+};
+if (debug) console.time("walls");
+let wall1 = makeWall([0, 25, 115], [0, -Math.PI, 0], "wall1");
+let wall2 = makeWall([0, 25, -115], [0, 0, 0], "wall2");
+let wall3 = makeWall([115, 25, 0], [0, -Math.PI / 2, 0], "wall3");
+let wall4 = makeWall([-115, 25, 0], [0, Math.PI / 2, 0], "wall4");
+if (debug) console.timeEnd("walls");
 // END Create Walls
 
 // END Create Room
 
 // Create Photo Panels
+
+
+
+new Worker("worker.js");
+window.postMessage(["get panel materials"]);
+window.addEventListener("message", (e) => {
+  if (e.data[0] === "panel textures") {
+    console.log(e.data);
+
+
+  }
+});
+
+if (debug) console.time("panels");
 let panels = {
   wall1: [[], []],
   wall2: [[], []],
@@ -160,12 +150,14 @@ const panelsDebugFolders = (() => {
     wall4: [panelsWall4Lower, panelsWall4Upper],
   };
 })();
+const panelGeometry = base.prepareGeometry("plane", [24, 18]);
+
 for (let i = 0; i < 6; i++) {
   panels.wall1[1].push(
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [93 - i * 37.3, 37.5, 114.6],
         rotation: [0, -Math.PI, 0],
         castShadow: false,
@@ -182,7 +174,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [93 - i * 37.3, 12.6, 114.6],
         rotation: [0, -Math.PI, 0],
         castShadow: false,
@@ -200,7 +192,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [-93.3 + i * 37.4, 37.5, -114.6],
         rotation: [0, 0, 0],
         castShadow: false,
@@ -217,7 +209,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [-93.3 + i * 37.4, 12.6, -114.6],
         rotation: [0, 0, 0],
         castShadow: false,
@@ -235,7 +227,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [114.6, 37.4, 93.3 - i * 37.4],
         rotation: [0, -Math.PI / 2, 0],
         castShadow: false,
@@ -252,7 +244,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [114.6, 12.6, 93.3 - i * 37.4],
         rotation: [0, -Math.PI / 2, 0],
         castShadow: false,
@@ -270,7 +262,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [-114.6, 37.4, -93.7 + i * 37.5],
         rotation: [0, +Math.PI / 2, 0],
         castShadow: false,
@@ -287,7 +279,7 @@ for (let i = 0; i < 6; i++) {
     base.addShape(
       "plane",
       {
-        dimensions: [24, 18],
+        geometry: panelGeometry,
         pos: [-114.6, 12.6, -93.7 + i * 37.5],
         rotation: [0, +Math.PI / 2, 0],
         castShadow: false,
@@ -301,7 +293,7 @@ for (let i = 0; i < 6; i++) {
     )
   );
 }
-
+if (debug) console.timeEnd("panels");
 // END Create Photo Panels
 
 // Create MC | Bind Camera
@@ -317,25 +309,14 @@ const tppcam = base.lockTPPCamera(model);
 
 // END Create MC | Bind Camera
 
-// base.loadGLTFModel(
-//   "./resources/static_models/camera/Camera_01_1k.gltf",
-//   [30, 15, 30],
-//   40,
-//   {
-//     debugName: "GLTFCamera",
-//   }
-// );
-// const table = base.loadGLTFModel(
-//   "./resources/static_models/table_01/ClassicConsole_01_1k.gltf",
-//   [0, 0, -35],
-//   15,
-//   {
-//     debugName: "GLTFTable",
-//   }
-// );
 // Create Chandeliers
 const lanternsFolder = base.addDebugFolder("lanterns");
-const makeLanterChandelier01 = (x, z, intensity = 50, color = 0xffffff) => {
+const makeLanterChandelier01 = async (
+  x,
+  z,
+  intensity = 50,
+  color = 0xffffff
+) => {
   const folder = base.addDebugFolder(`lantern (${x}, ${z})`, lanternsFolder);
   const model = base.loadGLTFModel(
     "./resources/static_models/lantern_chandelier_01/lantern_chandelier_01_1k.glb",
@@ -353,8 +334,8 @@ const makeLanterChandelier01 = (x, z, intensity = 50, color = 0xffffff) => {
             color: 0xffffff,
             intensity: 50,
             decay: 1,
-            pos: [x, 38.5, z],
-            shadow: false,
+            pos: [x, 27 /** 38.5 */, z],
+            shadow: true,
           },
           {
             debugFolder: folder,
@@ -365,12 +346,13 @@ const makeLanterChandelier01 = (x, z, intensity = 50, color = 0xffffff) => {
 
   return [model, pointLight ? pointLight : undefined];
 };
+if (debug) console.time("lanterns");
 const lanternChanRadius = 50;
 let lantern1 = makeLanterChandelier01(lanternChanRadius, lanternChanRadius);
 let lantern2 = makeLanterChandelier01(lanternChanRadius, -lanternChanRadius);
 let lantern3 = makeLanterChandelier01(-lanternChanRadius, lanternChanRadius);
 let lantern4 = makeLanterChandelier01(-lanternChanRadius, -lanternChanRadius);
-
+if (debug) console.timeEnd("lanterns");
 // END Create Chandeliers
 
 let panelChanging = false;
@@ -408,7 +390,7 @@ document.addEventListener(
   "keydown",
   (e) => {
     if (e.key == "f") {
-      base.frameRateDisplay("toggle", false);
+      base.frameRateDisplay("toggle", "paused");
     }
   },
   false
@@ -460,3 +442,5 @@ document.addEventListener(
   },
   false
 );
+
+if (debug) console.timeEnd("platform");

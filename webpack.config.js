@@ -15,6 +15,10 @@ module.exports = {
     })
   ],
   mode: 'development',
+  entry: {
+    app: './src/index.js',
+    worker: './src/worker.js'
+  },
   output: {
     clean: true
   },
