@@ -21,6 +21,7 @@ class CharacterControllerInput {
 
       // Nipple Joystick
       const options = {
+        zone: document.getElementById("nipple-canvas"),
         threshold:0.2,
         color: "gray",
       };

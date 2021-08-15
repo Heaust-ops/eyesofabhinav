@@ -16,6 +16,85 @@
             top: 0;
         }
     </style>
+    <!-- Fullscreen Button CSS -->
+    <style>
+        .fullscreen-button-container {
+            position: absolute;
+            -webkit-transform: translateY(-50%);
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+            text-align: center;
+        }
+
+        /** Button Code **/
+
+        .fullscreen-button {
+            width: 72px;
+            height: 72px;
+            line-height: 72px;
+            display: block;
+            position: relative;
+            -moz-border-radius: 50%;
+            -webkit-border-radius: 50%;
+            border-radius: 50%;
+            border: 4px solid rgb(18, 22, 24);
+            text-align: center;
+            display: inline-block;
+            position: relative;
+            z-index: 10;
+            transition: 1s;
+            color: rgb(42, 134, 170);
+        }
+
+        .fullscreen-button:hover {
+            color: rgb(153, 231, 255);
+        }
+
+        .fullscreen-button:after {
+            position: absolute !important;
+            content: "";
+            width: 66px;
+            height: 66px;
+            display: block;
+            position: relative;
+            -moz-border-radius: 50%;
+            -webkit-border-radius: 50%;
+            border-radius: 50%;
+            right: 3px;
+            top: 3px;
+            background-color: rgb(23, 29, 32);
+            visibility: hidden;
+            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+            opacity: 0;
+            -moz-transition: all 0.4s ease;
+            -o-transition: all 0.4s ease;
+            -webkit-transition: all 0.4s ease;
+            transition: all 0.4s ease;
+            opacity: 1\9;
+            visibility: visible\9;
+            display: none\9;
+            -moz-transform: scale(0.5, 0.5);
+            -ms-transform: scale(0.5, 0.5);
+            -webkit-transform: scale(0.5, 0.5);
+            transform: scale(0.5, 0.5);
+            z-index: -1;
+            -moz-transition: all 0.2s ease;
+            -o-transition: all 0.2s ease;
+            -webkit-transition: all 0.2s ease;
+            transition: all 0.2s ease;
+        }
+
+        .fullscreen-button:after {
+            visibility: visible;
+            filter: progid:DXImageTransform.Microsoft.Alpha(enabled=false);
+            opacity: 1;
+            display: block\9;
+            -moz-transform: scale(1, 1);
+            -ms-transform: scale(1, 1);
+            -webkit-transform: scale(1, 1);
+            transform: scale(1, 1);
+        }
+    </style>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,10 +105,22 @@
 
 <body>
 
-    <div
-        id="frame-rate-container"
-        style="position: fixed; z-index: 1; color: white; top: 0; left: 0; right: 0; text-align: center; display: none; width: 40%; margin: auto;">
-        <div style="background: rgba(0,0,0, 0.5); display: inline-block; padding: 0.5rem; border-bottom-right-radius: 0.4rem; border-bottom-left-radius: 0.4rem;"><h2 id="frame-rate"></h2></div>
+    <div id="frame-rate-container"
+        style="position: fixed; z-index: 5; color: white; top: 0; left: 0; right: 0; text-align: center; display: none; width: 40%; margin: auto;">
+        <div
+            style="background: rgba(0,0,0, 0.5); display: inline-block; padding: 0.5rem; border-bottom-right-radius: 0.4rem; border-bottom-left-radius: 0.4rem;">
+            <h2 id="frame-rate"></h2>
+        </div>
+    </div>
+
+
+
+    <div class="fullscreen-button-container" id="mobile-fullscreen-container"
+        style="position: fixed; z-index: 5; right: 1rem; bottom: 0; display: none; text-align: center;">
+        <a class="fullscreen-button" id="fullscreen-button" style="border-radius: 50%; display: inline-block;">
+            <h1><i id="fullscreen" class="fas fa-expand-alt"></i><i style="display: none;" id="exit-fullscreen"
+                    class="fas fa-compress-alt"></i></h1>
+        </a>
     </div>
 
 </body>

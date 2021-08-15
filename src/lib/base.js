@@ -19,7 +19,7 @@ class Base {
 
   _Initialize({ ambientLight, customInitFunc, debug } = {}) {
     this._renderer = new THREE.WebGLRenderer();
-    this._renderer.shadowMap.enabled = window.innerWidth > 1000 ? true : false;
+    this._renderer.shadowMap.enabled = true;
     this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this._shadowMapResolution = [2048, 2048];
     this.enableAverageFrameRateCalculation = false;
@@ -33,7 +33,7 @@ class Base {
     this.prepareGeometry = prepareGeometry;
 
     this._renderer.domElement.setAttribute("id", "three-canvas");
-    this._renderer.domElement.style.zIndex = "-1";
+    this._renderer.domElement.style.zIndex = "1";
 
     document.body.appendChild(this._renderer.domElement);
     this._aspect = "w/h";

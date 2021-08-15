@@ -1,6 +1,67 @@
 import Base from "./lib/base";
 import CharacterController from "./lib/CharacterController";
 import gsap from "gsap";
+// Font Awesome Imports
+import "@fortawesome/fontawesome-free/js/fontawesome";
+import "@fortawesome/fontawesome-free/js/solid";
+import "@fortawesome/fontawesome-free/js/regular";
+import "@fortawesome/fontawesome-free/js/brands";
+
+const mobileBreakPoint = 1000;
+
+if (window.innerWidth <= mobileBreakPoint) {
+  document.body.innerHTML += `<div style="position: fixed; width: 100vw; height: 100vh; z-index: 2;" id="nipple-canvas"></div>`;
+
+  const toggleFullscreen = (elem) => {
+    elem = elem || document.documentElement;
+
+    if (
+      !document.fullscreenElement &&
+      !document.mozFullScreenElement &&
+      !document.webkitFullscreenElement &&
+      !document.msFullscreenElement
+    ) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  };
+
+  document.getElementById("mobile-fullscreen-container").style.display =
+    "block";
+  let isFullScreen = false;
+  document.getElementById("fullscreen-button").onclick = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (isFullScreen) {
+      document.getElementById("exit-fullscreen").style.display = "none";
+      document.getElementById("fullscreen").style.display = "inline";
+      toggleFullscreen();
+      isFullScreen = !isFullScreen;
+    } else {
+      document.getElementById("exit-fullscreen").style.display = "inline";
+      document.getElementById("fullscreen").style.display = "none";
+      toggleFullscreen();
+      isFullScreen = !isFullScreen;
+    }
+  };
+}
 
 const debug = true;
 if (debug) console.time("platform");
@@ -13,14 +74,15 @@ Array.prototype.swap = function (x, y) {
 };
 
 const base = new Base({
-  ambientLight: window.innerWidth > 1000 ? 0xffffff : 0xffffff,
+  ambientLight: window.innerWidth > mobileBreakPoint ? 0xffffff : 0xffffff,
   customInitFunc: (parent) => {
     // Custom Init Function
     parent.enableAverageFrameRateCalculation = false;
     parent._renderer.shadowMap.enabled = false;
-    parent._ambientLight.intensity = window.innerWidth > 1000 ? 1 : 2;
+    parent._ambientLight.intensity =
+      window.innerWidth > mobileBreakPoint ? 1 : 2;
   },
-  debug,
+  debug: false,
 });
 base.frameRateDisplay("toggle", "paused");
 // Create Room
@@ -29,7 +91,7 @@ let floor = base.addShape(
   "Plane",
   {
     dimensions: [230, 230],
-    segments: window.innerWidth > 1000 ? [200, 200] : [1, 1],
+    segments: window.innerWidth > mobileBreakPoint ? [200, 200] : [1, 1],
     duplicateUV: true,
   },
   {
@@ -50,7 +112,7 @@ let roof = base.addShape(
   {
     dimensions: [230, 230],
     pos: [0, 49, 0],
-    segments: window.innerWidth > 1000 ? [50, 50] : [1, 1],
+    segments: window.innerWidth > mobileBreakPoint ? [50, 50] : [1, 1],
   },
   {
     color: "#a48163",
@@ -72,7 +134,7 @@ let roof = base.addShape(
 const wallGeometry = base.prepareGeometry(
   "plane",
   [300, 50],
-  window.innerWidth > 1000 ? [900, 30] : [1, 1]
+  window.innerWidth > mobileBreakPoint ? [900, 30] : [1, 1]
 );
 const wallTexture = base.prepareStandardMaterial({
   texturesPath: "./resources/textures/wood_wall_coffers_01",
@@ -110,15 +172,11 @@ if (debug) console.timeEnd("walls");
 
 // Create Photo Panels
 
-
-
 new Worker("worker.js");
 window.postMessage(["get panel materials"]);
 window.addEventListener("message", (e) => {
   if (e.data[0] === "panel textures") {
     console.log(e.data);
-
-
   }
 });
 
@@ -328,7 +386,7 @@ const makeLanterChandelier01 = async (
     }
   );
   const pointLight =
-    window.innerWidth > 1000
+    window.innerWidth > mobileBreakPoint
       ? base.addPointLight(
           {
             color: 0xffffff,
