@@ -5,6 +5,7 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import TPPCamera from "./TPPCamera";
 import prepareGeometry from "./PrepareGeometry";
 import prepareStandardMaterial from "./PrepareStandardMaterial";
+import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper";
 import Debug from "./DebugBasicMesh";
 // import { Text } from "troika-three-text";
 
@@ -27,13 +28,14 @@ class Base {
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._renderer.physicallyCorrectLights = true;
     this._gltfLoader = new GLTFLoader();
+    this._fbxLoader = new FBXLoader();
     this._textureLoader = new THREE.TextureLoader();
     this._cubeTextureLoader = new THREE.CubeTextureLoader();
     this.prepareStandardMaterial = prepareStandardMaterial;
     this.prepareGeometry = prepareGeometry;
 
     this._renderer.domElement.setAttribute("id", "three-canvas");
-    this._renderer.domElement.style.zIndex = "1";
+    this._renderer.domElement.style.zIndex = "-1";
 
     document.body.appendChild(this._renderer.domElement);
     this._aspect = "w/h";
@@ -113,6 +115,10 @@ class Base {
     };
   }
 
+  get raycaster() {
+    return new THREE.Raycaster();
+  }
+
   get scene() {
     return this._scene;
   }
@@ -161,9 +167,23 @@ class Base {
   //   });
   // }
 
+  getRayCaster() {
+    function onDocumentMouseMove(event) {
+      var mouse = new THREE.Vector2();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
+      var raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+      var intersects = raycaster.intersectObjects(planes);
 
-
+      if (intersects.length > 0) {
+        $("html,body").css("cursor", "pointer");
+      } else {
+        $("html,body").css("cursor", "default");
+      }
+    }
+  }
 
   random(min, max) {
     // min and max included
@@ -298,6 +318,53 @@ class Base {
     return light;
   }
 
+  addRectAreaLight(
+    {
+      color = 0xffffff,
+      width = 10,
+      height = 10,
+      intensity = 1,
+      from = [5, 5, 0],
+      to = [0, 0, 0],
+    } = {},
+    {
+      debug = true,
+      debugName = "genericReactAreaLight" + this.random(0, 10000),
+      debugPosMin = [-150, -150, -150],
+      debugPosMax = [150, 150, 150],
+      debugRotMin = [-Math.PI, -Math.PI, -Math.PI],
+      debugRotMax = [Math.PI, Math.PI, Math.PI],
+      debugPosStep = 0.01,
+      debugRotStep = 0.01,
+      debugFolder = this._gui,
+    } = {}
+  ) {
+    const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
+    rectLight.position.set(...from);
+    rectLight.lookAt(...to);
+    this._scene.add(rectLight);
+
+    if (this._debug && debug) {
+      const rectLightHelper = new RectAreaLightHelper(rectLight);
+      rectLight.add(rectLightHelper);
+      this._debugBasicMesh({
+        debugMesh: rectLight,
+        debug,
+        color,
+        debugName,
+        debugPosMin,
+        debugPosMax,
+        debugRotMin,
+        debugRotMax,
+        debugPosStep,
+        debugRotStep,
+        debugFolder,
+      });
+    }
+
+    return rectLight;
+  }
+
   addPointLight(
     {
       color = 0x404040,
@@ -305,7 +372,6 @@ class Base {
       intensity = 1,
       decay = 2,
       distance = 0,
-      helper = true,
       shadow = true,
     } = {},
     {
@@ -337,14 +403,14 @@ class Base {
     }
 
     this._scene.add(light);
-    if (this._debug && helper) {
-      const sphereSize = 1;
-      const pointLightHelper = new THREE.PointLightHelper(light, sphereSize);
-      this._scene.add(pointLightHelper);
+    if (this._debug) {
     }
 
     // Debug
-    if (this._debug) {
+    if (this._debug && debug) {
+      const sphereSize = 1;
+      const pointLightHelper = new THREE.PointLightHelper(light, sphereSize);
+      this._scene.add(pointLightHelper);
       this._debugBasicMesh({
         debugMesh: light,
         debug,
@@ -652,7 +718,7 @@ class Base {
     pos = [0, 0, 0],
     size = 0.1
   ) {
-    const loader = new FBXLoader();
+    const loader = this._fbxLoader;
     loader.setPath(path);
     loader.load(modelFile, (fbx) => {
       fbx.scale.setScalar(size);
@@ -661,7 +727,7 @@ class Base {
       });
       fbx.position.copy(new THREE.Vector3(...pos));
 
-      const anim = new FBXLoader();
+      const anim = this._fbxLoader;
       anim.setPath(path);
       anim.load(animFile, (anim) => {
         const m = new THREE.AnimationMixer(fbx);
@@ -673,8 +739,14 @@ class Base {
     });
   }
 
-  loadFBXModel(path, modelFile, pos = [0, 0, 0], size = 0.1) {
-    const loader = new FBXLoader();
+  loadFBXModel(
+    { path, modelFile, pos = [0, 0, 0], size = 0.1 } = {},
+    {
+      debugName = "FBXModel" + this.random(0, 10000),
+      debugFolder = this._gui,
+    } = {}
+  ) {
+    const loader = this._fbxLoader;
     loader.setPath(path);
     loader.load(modelFile, (fbx) => {
       fbx.scale.setScalar(size);
@@ -682,14 +754,22 @@ class Base {
         c.castShadow = true;
       });
       fbx.position.copy(new THREE.Vector3(...pos));
+      if (this._debug) {
+        this._debugBasicMesh({
+          debugMesh: fbx,
+          debugFolder,
+          debug: true,
+          debugName,
+          debugMinSize: size - 10,
+          debugMaxSize: size + 10,
+        });
+      }
       this._scene.add(fbx);
     });
   }
 
   loadGLTFModel(
-    modelPath,
-    pos = [0, 0, 0],
-    size = 1,
+    { modelPath, pos = [0, 0, 0], rotation = [0, 0, 0], size = 1 } = {},
     {
       debugName = "GLTFModel" + this.random(0, 10000),
       debugFolder = this._gui,
@@ -698,11 +778,13 @@ class Base {
     const attrKey = this._attrs.length;
     const loader = this._gltfLoader;
     loader.load(modelPath, (gltf) => {
-      gltf.scene.scale.set(size, size, size);
+      if (!(size instanceof Array)) size = [size, size, size];
+      gltf.scene.scale.set(...size);
       gltf.scene.traverse((c) => {
         c.castShadow = true;
       });
-      gltf.scene.position.copy(new THREE.Vector3(...pos));
+      gltf.scene.position.set(...pos);
+      gltf.scene.rotation.set(...rotation);
       this._scene.add(gltf.scene);
       this._attrs.push(gltf.scene);
       if (this._debug) {
