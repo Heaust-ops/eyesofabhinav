@@ -9,17 +9,32 @@ import "@fortawesome/fontawesome-free/js/brands";
 
 const debug = true;
 const mobileBreakPoint = 1000;
+const pi = Math.PI;
+let i;
+let ndcMouseX = -1;
+let ndcMouseY = -1;
 
 // Utils
+const sliceIntoChunks = (arr, chunkSize) => {
+  const res = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    const chunk = arr.slice(i, i + chunkSize);
+    res.push(chunk);
+  }
+  return res;
+};
+
 const addToMag = (num, offset) => {
   return Math.sign(~~num) * (Math.abs(~~num) + offset);
 };
+
 Array.prototype.swap = function (x, y) {
   var b = this[x];
   this[x] = this[y];
   this[y] = b;
   return this;
 };
+
 // END Utils
 
 // Fullscren Button For Mobile
@@ -87,325 +102,172 @@ const base = new Base({
     parent.enableAverageFrameRateCalculation = false;
     parent._renderer.shadowMap.enabled = false;
     parent._ambientLight.intensity =
-      window.innerWidth > mobileBreakPoint ? 1 : 2;
+      window.innerWidth > mobileBreakPoint ? 2 : 5;
   },
-  debug,
+  debug: false,
 });
 base.frameRateDisplay("toggle", "paused");
 
-// Create Room
-const roomFolder = base.addDebugFolder("room");
-let floor = base.addShape(
-  "Plane",
-  {
-    dimensions: [230, 230],
-    segments: window.innerWidth > mobileBreakPoint ? [200, 200] : [1, 1],
-    duplicateUV: true,
-  },
-  {
-    texturesPath: "./resources/textures/hexa_wood_tiles_01",
-    map: "jpg",
-    aoMap: "jpg",
-    displacementMap: "png",
-    normalMap: "jpg",
-    roughnessMap: "jpg",
-    displacementScale: 1.0,
-    repeat: [8, 8],
-  },
-  { debugName: "Floor", debugFolder: roomFolder }
-);
-
-let roof = base.addShape(
-  "Plane",
-  {
-    dimensions: [230, 230],
-    pos: [0, 49, 0],
-    segments: window.innerWidth > mobileBreakPoint ? [50, 50] : [1, 1],
-  },
-  {
-    color: "#a48163",
-    colorMultiply: true,
-    texturesPath: "./resources/textures/aerial_asphalt_01",
-    bumpMap: "./resources/textures/wall_noise/dst.jpg",
-    bumpScale: 2.0,
-    map: "jpg",
-    aoMap: "jpg",
-    displacementMap: "png",
-    normalMap: "jpg",
-    roughness: 0.2,
-    roughnessMap: "jpg",
-    displacementScale: 0.2,
-    side: "back",
-    repeat: [8, 8],
-  },
-  { debugName: "Roof", debugFolder: roomFolder }
-);
-
-// Create Walls
-const wallGeometry = base.prepareGeometry(
-  "plane",
-  [300, 50],
-  window.innerWidth > mobileBreakPoint ? [900, 30] : [1, 1]
-);
-const wallTexture = base.prepareStandardMaterial({
-  color: "#d9aa82",
-  colorMultiply: true,
-  texturesPath: "./resources/textures/wood_wall_coffers_01",
-  map: "./resources/textures/wall_noise/noise(7).jpg",
-  roughness: 0.25,
-});
-const wallsFolder = base.addDebugFolder("walls", roomFolder);
-const makeWall = (pos, rotation, debugName) => {
-  return base.addShape(
-    "Plane",
-    {
-      geometry: wallGeometry,
-      pos,
-      rotation,
-      castShadow: false,
-    },
-    { material: wallTexture },
-    { debugFolder: wallsFolder, debugName }
-  );
+const apidict = {
+  photo1:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo2:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo3:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo4:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo5:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  //
+  photo6:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo7:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo8:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo9:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo10:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  //
+  photo11:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo12:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo13:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo14:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo15:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  //
+  photo16:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo17:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo18:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo19:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo20:
+    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
 };
-if (debug) console.time("walls");
-let wall1 = makeWall([0, 25, 115], [0, -Math.PI, 0], "wall1");
-let wall2 = makeWall([0, 25, -115], [0, 0, 0], "wall2");
-let wall3 = makeWall([115, 25, 0], [0, -Math.PI / 2, 0], "wall3");
-let wall4 = makeWall([-115, 25, 0], [0, Math.PI / 2, 0], "wall4");
-if (debug) console.timeEnd("walls");
-// END Create Walls
+
+// Create Room
+window.innerWidth > mobileBreakPoint
+  ? base.loadGLTFModel({
+      modelPath: "./resources/static_models/gallery/gal.glb",
+      size: 12,
+    })
+  : base.loadGLTFModel({
+      modelPath: "./resources/static_models/gallery/gal.glb",
+      size: 12,
+      removeObjSubstr: "oint",
+    });
 
 // END Create Room
 
 // Create Photo Panels
 
 if (debug) console.time("panels");
-let panels = {
-  wall1: [[], []],
-  wall2: [[], []],
-  wall3: [[], []],
-  wall4: [[], []],
-};
+let panels = [];
 const panelsDebugFolders = (() => {
   const panelsFolder = base.addDebugFolder("panels");
   const panelsWall1 = base.addDebugFolder("wall 1 panels", panelsFolder);
-  const panelsWall1Lower = base.addDebugFolder("lower", panelsWall1);
-  const panelsWall1Upper = base.addDebugFolder("upper", panelsWall1);
   const panelsWall2 = base.addDebugFolder("wall 2 panels", panelsFolder);
-  const panelsWall2Lower = base.addDebugFolder("lower", panelsWall2);
-  const panelsWall2Upper = base.addDebugFolder("upper", panelsWall2);
   const panelsWall3 = base.addDebugFolder("wall 3 panels", panelsFolder);
-  const panelsWall3Lower = base.addDebugFolder("lower", panelsWall3);
-  const panelsWall3Upper = base.addDebugFolder("upper", panelsWall3);
   const panelsWall4 = base.addDebugFolder("wall 4 panels", panelsFolder);
-  const panelsWall4Lower = base.addDebugFolder("lower", panelsWall4);
-  const panelsWall4Upper = base.addDebugFolder("upper", panelsWall4);
   return {
-    wall1: [panelsWall1Lower, panelsWall1Upper],
-    wall2: [panelsWall2Lower, panelsWall2Upper],
-    wall3: [panelsWall3Lower, panelsWall3Upper],
-    wall4: [panelsWall4Lower, panelsWall4Upper],
+    wall1: panelsWall1,
+    wall2: panelsWall2,
+    wall3: panelsWall3,
+    wall4: panelsWall4,
   };
 })();
-const panelGeometry = base.prepareGeometry("plane", [24, 18]);
-
-let panelEdge = 114;
-let panelLowerPos = 15.0;
-let panelUpperPos = 37.4;
-
+const panelGeometry = base.prepareGeometry("plane", [28.2, 28.2], [1, 1]);
 const addPanel = (
-  spacing,
-  frameSpacing,
+  startXZ,
+  spacingXZ,
+  photo,
+  n,
   rotation,
-  map,
   debugFolder,
-  debugName,
-  wallSide
+  offsetXZ = [0, 0]
 ) => {
-  const pos = {
-    "x:up": [panelEdge, panelUpperPos, spacing],
-    "z:up": [spacing, panelUpperPos, panelEdge],
-    "-x:up": [-panelEdge, panelUpperPos, spacing],
-    "-z:up": [spacing, panelUpperPos, -panelEdge],
-    "x:down": [panelEdge, panelLowerPos, spacing],
-    "z:down": [spacing, panelLowerPos, panelEdge],
-    "-x:down": [-panelEdge, panelLowerPos, spacing],
-    "-z:down": [spacing, panelLowerPos, -panelEdge],
-  }[wallSide];
-  spacing = addToMag(spacing, -1.4);
-  const frameElevationOffset = 10;
-  const panelFrameEdge = addToMag(panelEdge, -2.8);
-  const frameSpacingOffsetLocal = 2;
-  const posFrame = {
-    "x:up": [
-      panelFrameEdge,
-      panelUpperPos - frameElevationOffset,
-      frameSpacing - frameSpacingOffsetLocal,
-    ],
-    "z:up": [
-      frameSpacing - frameSpacingOffsetLocal,
-      panelUpperPos - frameElevationOffset,
-      panelFrameEdge,
-    ],
-    "-x:up": [
-      -panelFrameEdge,
-      panelUpperPos - frameElevationOffset,
-      frameSpacing - frameSpacingOffsetLocal,
-    ],
-    "-z:up": [
-      frameSpacing - frameSpacingOffsetLocal,
-      panelUpperPos - frameElevationOffset,
-      -panelFrameEdge,
-    ],
-    "x:down": [
-      panelFrameEdge,
-      panelLowerPos - frameElevationOffset,
-      frameSpacing - frameSpacingOffsetLocal,
-    ],
-    "z:down": [
-      frameSpacing - frameSpacingOffsetLocal,
-      panelLowerPos - frameElevationOffset,
-      panelFrameEdge,
-    ],
-    "-x:down": [
-      -panelFrameEdge,
-      panelLowerPos - frameElevationOffset,
-      frameSpacing - frameSpacingOffsetLocal,
-    ],
-    "-z:down": [
-      frameSpacing - frameSpacingOffsetLocal,
-      panelLowerPos - frameElevationOffset,
-      -panelFrameEdge,
-    ],
-  }[wallSide];
-  const folder = base.addDebugFolder(debugName, debugFolder);
-  const frame = base.loadGLTFModel(
-    {
-      modelPath: "./resources/static_models/picture-frame/picture frame.glb",
-      pos: posFrame,
-      rotation: [0, rotation[1] + (3 * Math.PI) / 2, 0],
-      size: [0.5, 0.42, 0.5],
-    },
-
-    {
-      debugName: "frame",
-      debugFolder: folder,
-    }
-  );
   const panel = base.addShape(
     "plane",
     {
       geometry: panelGeometry,
-      pos,
-      rotation,
-      castShadow: false,
+      pos: [
+        startXZ[0] + n * spacingXZ[0] + offsetXZ[0],
+        21.75,
+        startXZ[1] + n * spacingXZ[1] + offsetXZ[1],
+      ],
+      rotation: [0, rotation, 0],
     },
     {
-      map,
+      map: photo,
       lightMap: "./resources/textures/white_box.png",
       lightMapIntensity: 2.0,
     },
-    { debugName: "panel", debugFolder: folder }
+    { debugFolder, debugName: `panel${n}` }
   );
-  return panel;
+
+  panels.push(panel);
 };
-const spacingOffset = 37.4;
-const frameSpacingOffset = 37.4;
-for (let i = 0; i < 6; i++) {
-  panels.wall1[1].push(
-    addPanel(
-      93 - i * spacingOffset,
-      93 - i * frameSpacingOffset,
-      [0, -Math.PI, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall1[1],
-      "panel" + (i + 1),
-      "z:up"
-    )
-  );
-  panels.wall1[0].push(
-    addPanel(
-      93 - i * spacingOffset,
-      93 - i * frameSpacingOffset,
-      [0, -Math.PI, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall1[0],
-      "panel" + (i + 1),
-      "z:down"
-    )
-  );
 
-  panels.wall2[1].push(
-    addPanel(
-      -93.3 + i * spacingOffset,
-      -90.3 + i * frameSpacingOffset,
-      [0, 0, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall2[1],
-      "panel" + (i + 1),
-      "-z:up"
-    )
-  );
-  panels.wall2[0].push(
-    addPanel(
-      -93.3 + i * spacingOffset,
-      -90.3 + i * frameSpacingOffset,
-      [0, 0, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall2[0],
-      "panel" + (i + 1),
-      "-z:down"
-    )
-  );
-
-  panels.wall3[1].push(
-    addPanel(
-      93.3 - i * spacingOffset,
-      97.3 - i * frameSpacingOffset,
-      [0, -Math.PI / 2, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall3[1],
-      "panel" + (i + 1),
-      "x:up"
-    )
-  );
-  panels.wall3[0].push(
-    addPanel(
-      93.3 - i * spacingOffset,
-      97.3 - i * frameSpacingOffset,
-      [0, -Math.PI / 2, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall3[0],
-      "panel" + (i + 1),
-      "x:down"
-    )
-  );
-
-  panels.wall4[1].push(
-    addPanel(
-      -93.7 + i * spacingOffset,
-      -93.7 + i * frameSpacingOffset,
-      [0, +Math.PI / 2, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall4[1],
-      "panel" + (i + 1),
-      "-x:up"
-    )
-  );
-  panels.wall4[0].push(
-    addPanel(
-      -93.7 + i * spacingOffset,
-      -93.7 + i * frameSpacingOffset,
-      [0, +Math.PI / 2, 0],
-      "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-      panelsDebugFolders.wall4[0],
-      "panel" + (i + 1),
-      "-x:down"
-    )
+const apidictkeys = sliceIntoChunks(Object.keys(apidict), 5);
+// Wall 1
+for (i = 0; i < 5; i++) {
+  addPanel(
+    [78.8, 114.3],
+    [-41, 0],
+    apidict[apidictkeys[0][i]],
+    i,
+    pi,
+    panelsDebugFolders.wall1
   );
 }
+
+// Wall 2
+for (i = 0; i < 5; i++) {
+  addPanel(
+    [115.32, -79.5],
+    [0, 41],
+    apidict[apidictkeys[1][i]],
+    i,
+    -pi / 2,
+    panelsDebugFolders.wall2
+  );
+}
+
+// Wall 3
+for (i = 0; i < 5; i++) {
+  addPanel(
+    [81.2, -114.75],
+    [-41, 0],
+    apidict[apidictkeys[2][i]],
+    i,
+    0,
+    panelsDebugFolders.wall3
+  );
+}
+
+// Wall 4
+for (i = 0; i < 5; i++) {
+  addPanel(
+    [-115, -82.13],
+    [0, 41],
+    apidict[apidictkeys[3][i]],
+    i,
+    pi / 2,
+    panelsDebugFolders.wall4
+  );
+}
+
 if (debug) console.timeEnd("panels");
+
 // END Create Photo Panels
 
 // Create MC | Bind Camera
@@ -424,204 +286,94 @@ const tppcam = base.lockTPPCamera(model, {
 
 // END Create MC | Bind Camera
 
-// Create Chandeliers
-const lanternsFolder = base.addDebugFolder("lanterns");
-const makeLanterChandelier01 = async (
-  x,
-  z,
-  intensity = 50,
-  color = 0xffffff
-) => {
-  const folder = base.addDebugFolder(`lantern (${x}, ${z})`, lanternsFolder);
-  const model = base.loadGLTFModel(
-    {
-      modelPath:
-        "./resources/static_models/lantern_chandelier_01/lantern_chandelier_01_1k.glb",
-      pos: [x, 49, z],
-      size: 20,
-    },
-    {
-      debugFolder: folder,
-      debugName: "gltfmodel",
-    }
-  );
-  const pointLight =
-    window.innerWidth > mobileBreakPoint
-      ? base.addPointLight(
-          {
-            color: 0xffffff,
-            intensity: 20,
-            decay: 1,
-            pos: [x, 38.5 /** 27 */ /** 38.5 */, z],
-            shadow: true,
-          },
-          {
-            debugFolder: folder,
-            debugName: "pointLight",
-          }
-        )
-      : undefined;
+// Panel Viewing Logic
 
-  return [model, pointLight ? pointLight : undefined];
-};
-if (debug) console.time("lanterns");
-const lanternChanRadius = 50;
-let lantern1 = makeLanterChandelier01(lanternChanRadius, lanternChanRadius);
-let lantern2 = makeLanterChandelier01(lanternChanRadius, -lanternChanRadius);
-let lantern3 = makeLanterChandelier01(-lanternChanRadius, lanternChanRadius);
-let lantern4 = makeLanterChandelier01(-lanternChanRadius, -lanternChanRadius);
-if (debug) console.timeEnd("lanterns");
-// END Create Chandeliers
-
-// Change Panels
-let panelChanging = false;
-const change_panel = (
-  property,
-  inAxis,
-  axisSign,
-  goingUpOrDown,
-  duration = 1
-) => {
-  gsap.to(property, {
-    keyframes: [
-      {
-        duration,
-        [inAxis]:
-          goingUpOrDown.toLowerCase() == "up"
-            ? ~~`${axisSign}105`
-            : ~~`${axisSign}95`,
-      },
-      {
-        duration,
-        y: goingUpOrDown.toLowerCase() == "up" ? panelUpperPos : panelLowerPos,
-      },
-      {
-        duration,
-        [inAxis]: ~~`${axisSign}${panelEdge}`,
-      },
-    ],
-  });
-};
-// END Change Panels
-
-// Area Lights
 if (window.innerWidth > mobileBreakPoint) {
-  if (debug) console.time("area lights");
-  const rectAreaFolder = base.addDebugFolder("React Area Ligths");
-  const rectAreaIntensity = 5;
-  const reactAreaPlacementRadius = 115;
-  const rectLight1 = base.addRectAreaLight(
-    {
-      width: 300,
-      intensity: rectAreaIntensity,
-      from: [28.25, 50.1, -reactAreaPlacementRadius],
-      to: [28.25, 0, -reactAreaPlacementRadius],
-    },
-    {
-      debugName: "Light -z",
-      debugFolder: rectAreaFolder,
+  let allPanels = panels;
+  let deIlluminationQueue = [];
+  const deIlluminatePanels = () => {
+    while (deIlluminationQueue.length > 0) {
+      gsap.to(deIlluminationQueue.pop(), {
+        duration: 0.35,
+        lightMapIntensity: 2.0,
+      });
     }
-  );
-  const rectLight2 = base.addRectAreaLight(
-    {
-      width: 300,
-      intensity: rectAreaIntensity,
-      from: [28.25, 50.1, reactAreaPlacementRadius],
-      to: [28.25, 0, reactAreaPlacementRadius],
-    },
-    {
-      debugName: "Light +z",
-      debugFolder: rectAreaFolder,
+  };
+  let rc = base.raycaster;
+
+  const changeCursorOnPanels = () => {
+    rc.setFromCamera(base.getVector3(ndcMouseX, ndcMouseY, 0), base.camera);
+    let intersects = rc.intersectObjects(allPanels);
+    let cursorStyle = document.body.style.cursor;
+    if (intersects.length > 0) {
+      if (cursorStyle != "pointer") document.body.style.cursor = "pointer";
+      deIlluminationQueue.push(intersects[0].object.material);
+      gsap.to(intersects[0].object.material, {
+        duration: 0.35,
+        lightMapIntensity: 3.0,
+      });
+    } else {
+      if (cursorStyle != "auto") document.body.style.cursor = "auto";
+      deIlluminatePanels();
     }
+  };
+
+  let changeCursorOnPanelsInterval = setInterval(changeCursorOnPanels, 100);
+
+  const imageView = document.getElementById("image-view");
+  const imageViewCloseButton = document.getElementById(
+    "image-view-close-container"
   );
-  const rectLight3 = base.addRectAreaLight(
-    {
-      width: 300,
-      intensity: rectAreaIntensity,
-      from: [0, 51.1, 0],
-      to: [0, 0, 0],
-    },
-    {
-      debugName: "Light +x",
-      debugFolder: rectAreaFolder,
+  const changePanelOnClick = async () => {
+    rc.setFromCamera(base.getVector3(ndcMouseX, ndcMouseY, 0), base.camera);
+    let intersects = rc.intersectObjects(allPanels);
+    if (intersects.length > 0) {
+      clearInterval(changeCursorOnPanelsInterval);
+      document.body.style.cursor = "auto";
+      imageView.style.backgroundImage = `url(${intersects[0].object.material.map.image.src})`;
+      imageView.style.display = "block";
+      imageViewCloseButton.style.display = "block";
+      await new Promise((r) => setTimeout(r, 10));
+      imageView.style.opacity = 1;
+      imageViewCloseButton.style.opacity = 1;
+      deIlluminatePanels();
     }
-  );
-  rectLight3.rotation.z = Math.PI / 2;
-  rectLight3.position.z = 28.25;
-  rectLight3.position.x = reactAreaPlacementRadius;
-  const rectLight4 = base.addRectAreaLight(
-    {
-      width: 300,
-      intensity: rectAreaIntensity,
-      from: [0, 51.1, 0],
-      to: [0, 0, 0],
-    },
-    {
-      debugName: "Light -x",
-      debugFolder: rectAreaFolder,
-    }
-  );
-  rectLight4.rotation.z = Math.PI / 2;
-  rectLight4.position.z = 28.25;
-  rectLight4.position.x = -reactAreaPlacementRadius;
-  if (debug) console.timeEnd("area lights");
+  };
+  imageViewCloseButton.onclick = async (e) => {
+    imageView.style.opacity = 0;
+    imageViewCloseButton.style.opacity = 0;
+    await new Promise((r) => setTimeout(r, 1000));
+    imageView.style.display = "none";
+    imageViewCloseButton.style.display = "none";
+    changeCursorOnPanelsInterval = setInterval(changeCursorOnPanels, 100);
+  };
+  // Events
+  document.addEventListener("mousedown", changePanelOnClick);
+  document.addEventListener("mousemove", (e) => {
+    ndcMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    ndcMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
 }
-// END Area Lights
+
+// END Panel viewing Logic
 
 // Event Handling
 
 document.addEventListener(
   "keydown",
   (e) => {
-    if (e.key == "f") {
-      base.frameRateDisplay("toggle", "paused");
-    }
-  },
-  false
-);
-
-document.addEventListener(
-  "keydown",
-  async (e) => {
-    if (e.key == "ArrowUp" && !panelChanging) {
-      panelChanging = true;
-      const duration = 3;
-      // Swapping Panels
-      // Wall 1
-      panels.wall1[1].forEach((panel, i) => {
-        change_panel(panel.position, "z", "+", "down");
-      });
-      panels.wall1[0].forEach((panel, i) => {
-        change_panel(panel.position, "z", "+", "up");
-      });
-      panels.wall1.swap(0, 1);
-      // Wall 2
-      panels.wall2[1].forEach((panel, i) => {
-        change_panel(panel.position, "z", "-", "down");
-      });
-      panels.wall2[0].forEach((panel, i) => {
-        change_panel(panel.position, "z", "-", "up");
-      });
-      panels.wall2.swap(0, 1);
-      await new Promise((r) => setTimeout(r, duration * 1000));
-      // Wall 3
-      panels.wall3[1].forEach((panel, i) => {
-        change_panel(panel.position, "x", "+", "down");
-      });
-      panels.wall3[0].forEach((panel, i) => {
-        change_panel(panel.position, "x", "+", "up");
-      });
-      panels.wall3.swap(0, 1);
-      // Wall 4
-      panels.wall4[1].forEach((panel, i) => {
-        change_panel(panel.position, "x", "-", "down");
-      });
-      panels.wall4[0].forEach((panel, i) => {
-        change_panel(panel.position, "x", "-", "up");
-      });
-      panels.wall4.swap(0, 1);
-      await new Promise((r) => setTimeout(r, duration * 1000));
-      panelChanging = false;
+    switch (e.key) {
+      case "f":
+        base.frameRateDisplay("toggle", "paused");
+        break;
+      case "ArrowUp":
+        tppcam.fov += 1;
+        tppcam.updateProjectionMatrix();
+        break;
+      case "ArrowDown":
+        tppcam.fov -= 1;
+        tppcam.updateProjectionMatrix();
+        break;
     }
   },
   false

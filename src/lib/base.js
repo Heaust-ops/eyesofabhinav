@@ -7,12 +7,13 @@ import prepareGeometry from "./PrepareGeometry";
 import prepareStandardMaterial from "./PrepareStandardMaterial";
 import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper";
 import Debug from "./DebugBasicMesh";
+
 // import { Text } from "troika-three-text";
 
 class Base {
   constructor({
     customInitFunc = false,
-    ambientLight = 0x404040,
+    ambientLight = 0xffffff,
     debug = false,
   } = {}) {
     this._Initialize({ ambientLight, customInitFunc, debug });
@@ -51,8 +52,6 @@ class Base {
     this._scene = new THREE.Scene();
     this._animations = [];
 
-    this._ambientLight = new THREE.AmbientLight(ambientLight);
-    this._scene.add(this._ambientLight);
     this._mixers = [];
     this._steps = [];
     this._attrs = [];
@@ -71,6 +70,8 @@ class Base {
       this.addDebugFolder = () => {};
     }
 
+    this._ambientLight = new THREE.AmbientLight(ambientLight);
+    this._scene.add(this._ambientLight);
     if (customInitFunc) customInitFunc(this);
 
     if (this.enableAverageFrameRateCalculation) {
@@ -94,7 +95,51 @@ class Base {
       });
     }
 
+    THREE.DefaultLoadingManager.onStart = function (
+      url,
+      itemsLoaded,
+      itemsTotal
+    ) {
+      console.log(
+        "Started loading file: " +
+          url +
+          ".\nLoaded " +
+          itemsLoaded +
+          " of " +
+          itemsTotal +
+          " files."
+      );
+    };
+
+    THREE.DefaultLoadingManager.onLoad = function () {
+      console.log("Loading Complete!");
+    };
+
+    THREE.DefaultLoadingManager.onProgress = function (
+      url,
+      itemsLoaded,
+      itemsTotal
+    ) {
+      console.log(
+        "Loading file: " +
+          url +
+          ".\nLoaded " +
+          itemsLoaded +
+          " of " +
+          itemsTotal +
+          " files."
+      );
+    };
+
+    THREE.DefaultLoadingManager.onError = function (url) {
+      console.log("There was an error loading " + url);
+    };
+
     this._RAF();
+  }
+
+  get camera() {
+    return this._camera;
   }
 
   get TextureFilters() {
@@ -166,23 +211,8 @@ class Base {
   //     debugFolder,
   //   });
   // }
-
-  getRayCaster() {
-    function onDocumentMouseMove(event) {
-      var mouse = new THREE.Vector2();
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      var raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
-      var intersects = raycaster.intersectObjects(planes);
-
-      if (intersects.length > 0) {
-        $("html,body").css("cursor", "pointer");
-      } else {
-        $("html,body").css("cursor", "default");
-      }
-    }
+  getVector3(a, b, c) {
+    return new THREE.Vector3(a, b, c);
   }
 
   random(min, max) {
@@ -208,9 +238,10 @@ class Base {
   ) {
     this.addCamera({ ...cameraParams, orbital: false });
     this._TPPCamera = new TPPCamera(this._camera, target, offset, lookat);
-    return this.addStep((t, parent) => {
+    this.addStep((t, parent) => {
       parent._TPPCamera.Update(t);
     });
+    return this._camera;
   }
 
   unlockTPPCamera(key, orbital = true) {
@@ -769,7 +800,14 @@ class Base {
   }
 
   loadGLTFModel(
-    { modelPath, pos = [0, 0, 0], rotation = [0, 0, 0], size = 1 } = {},
+    {
+      modelPath,
+      pos = [0, 0, 0],
+      rotation = [0, 0, 0],
+      size = 1,
+      removeObjSubstr = "",
+      preprocess = (/* gltfScene */) => {},
+    } = {},
     {
       debugName = "GLTFModel" + this.random(0, 10000),
       debugFolder = this._gui,
@@ -780,11 +818,20 @@ class Base {
     loader.load(modelPath, (gltf) => {
       if (!(size instanceof Array)) size = [size, size, size];
       gltf.scene.scale.set(...size);
+      let tmpArr = [];
       gltf.scene.traverse((c) => {
-        c.castShadow = true;
+        if (removeObjSubstr && c.name.includes(removeObjSubstr)) {
+          tmpArr.push(c);
+        } else {
+          c.castShadow = false;
+        }
+      });
+      tmpArr.forEach((node) => {
+        gltf.scene.remove(node);
       });
       gltf.scene.position.set(...pos);
       gltf.scene.rotation.set(...rotation);
+      preprocess(gltf.scene, this);
       this._scene.add(gltf.scene);
       this._attrs.push(gltf.scene);
       if (this._debug) {
