@@ -2,6 +2,15 @@
 <html lang="en">
 
 <head>
+    <link rel="prefetch" href="./resources/brands/facebook.svg" />
+    <link rel="prefetch" href="./resources/brands/instagram.svg" />
+    <link rel="prefetch" href="./resources/brands/linkedin.svg" />
+    <link rel="prefetch" href="./resources/brands/pinterest.svg" />
+    <link rel="prefetch" href="./resources/brands/twitter.svg" />
+    <link rel="prefetch"
+        href="https://s3.amazonaws.com/www-inside-design/uploads/2020/10/aspect-ratios-blogpost-1x1-1.png" />
+    <link rel="stylesheet" href="./resources/css/socials.css">
+    <link rel="stylesheet" href="./resources/css/loadingscreen.css">
     <style>
         *,
         html,
@@ -182,6 +191,46 @@
 </head>
 
 <body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen-ui-container" class="loading-screen-ui-container" style="z-index:10;">
+        <div class="logo-wrapper">
+            <div style="display: flex; justify-content: center;">
+                <div class="avatar">
+                    <img src="https://s3.amazonaws.com/www-inside-design/uploads/2020/10/aspect-ratios-blogpost-1x1-1.png"
+                        alt="Avatar" />
+                </div>
+            </div>
+            <div class="svg-animation-wrapper">
+                <h1 style="display: inline-block; vertical-align: middle; line-height: normal;">EYESOFABHINAV</h1>
+            </div>
+        </div>
+        <div class="bio">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sapiente tempore harum esse ea voluptates aliquid.
+            Mollitia, deserunt. Consectetur, quibusdam cupiditate aliquam accusantium minima numquam deleniti, itaque
+            mollitia nostrum aut corporis.
+        </div>
+        <div class="socials">
+            <div class="set rounded fg-inflate fg-tilt fg-shadow">
+                <a href="##" class="social facebook">Facebook</a>
+                <a href="##" class="social twitter">Twitter</a>
+                <a href="##" class="social google-plus">Google+</a>
+                <a href="##" class="social pinterest">Pinterest</a>
+                <a href="##" class="social instagram">Instagram</a>
+                <a href="##" class="social linked-in">LinkedIn</a>
+            </div>
+        </div>
+
+        <div class="loading-bar">
+            <div class="progress">
+                <div id="progress-width" class="bar" style="width:0%">
+                    <h2 id="progress-text" class="percent">0%</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Loading Screen END -->
 
     <div id="frame-rate-container"
         style="position: fixed; z-index: 3; color: white; top: 0; left: 0; right: 0; text-align: center; display: none; width: 40%; margin: auto;">

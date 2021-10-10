@@ -7,6 +7,7 @@ import prepareGeometry from "./PrepareGeometry";
 import prepareStandardMaterial from "./PrepareStandardMaterial";
 import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper";
 import Debug from "./DebugBasicMesh";
+import gsap from "gsap";
 
 // import { Text } from "troika-three-text";
 
@@ -37,7 +38,6 @@ class Base {
 
     this._renderer.domElement.setAttribute("id", "three-canvas");
     this._renderer.domElement.style.zIndex = "-1";
-
     document.body.appendChild(this._renderer.domElement);
     this._aspect = "w/h";
 
@@ -95,24 +95,26 @@ class Base {
       });
     }
 
+    const changeLoadPercentage = (percentage) => {
+      if (percentage > 100) percentage = 100;
+      gsap.to(document.getElementById("progress-width").style, {
+        duration: 1,
+        width: `${percentage}%`,
+      });
+
+      document.getElementById("progress-text").innerHTML = `${percentage}%`;
+    };
+
     THREE.DefaultLoadingManager.onStart = function (
       url,
       itemsLoaded,
       itemsTotal
     ) {
-      console.log(
-        "Started loading file: " +
-          url +
-          ".\nLoaded " +
-          itemsLoaded +
-          " of " +
-          itemsTotal +
-          " files."
+      this._majorSegmentLoadTotal = itemsTotal;
+      this._majorSegmentLoaded = itemsLoaded;
+      changeLoadPercentage(
+        ~~((this._majorSegmentLoaded / this._majorSegmentLoadTotal) * 100)
       );
-    };
-
-    THREE.DefaultLoadingManager.onLoad = function () {
-      console.log("Loading Complete!");
     };
 
     THREE.DefaultLoadingManager.onProgress = function (
@@ -120,15 +122,21 @@ class Base {
       itemsLoaded,
       itemsTotal
     ) {
-      console.log(
-        "Loading file: " +
-          url +
-          ".\nLoaded " +
-          itemsLoaded +
-          " of " +
-          itemsTotal +
-          " files."
+      changeLoadPercentage(
+        ~~(
+          (
+            (this._majorSegmentLoaded / this._majorSegmentLoadTotal) * 100 + // Major Segment
+            (itemsLoaded * 100) / (itemsTotal * this._majorSegmentLoadTotal)
+          ) // Minor Segment
+        )
       );
+    };
+
+    THREE.DefaultLoadingManager.onLoad = function () {
+      setTimeout(() => {
+        document.getElementById("loading-screen-ui-container").style.display =
+          "none";
+      }, 5000);
     };
 
     THREE.DefaultLoadingManager.onError = function (url) {
@@ -168,49 +176,6 @@ class Base {
     return this._scene;
   }
 
-  // addText(
-  //   text,
-  //   {
-  //     position = [0, 10, 0],
-  //     rotation = [0, 0, 0],
-  //     fontSize = 0.5,
-  //     color = 0x9966ff,
-  //   } = {},
-  //   {
-  //     debug = true,
-  //     debugName = "genericText" + this.random(0, 10000),
-  //     debugPosMin = [-150, -150, -150],
-  //     debugPosMax = [150, 150, 150],
-  //     debugRotMin = [-Math.PI, -Math.PI, -Math.PI],
-  //     debugRotMax = [Math.PI, Math.PI, Math.PI],
-  //     debugPosStep = 0.01,
-  //     debugRotStep = 0.01,
-  //     debugFolder = this._gui,
-  //   } = {}
-  // ) {
-  //   const newText = new Text();
-  //   newText.text = text;
-  //   newText.color = color;
-  //   newText.fontSize = fontSize;
-  //   newText.position.set(...position);
-  //   newText.rotation.set(...rotation);
-  //   this._scene.add(newText);
-
-  //   // Debug
-  //   this._debugBasicMesh({
-  //     debugMesh: newText,
-  //     debug,
-  //     color,
-  //     debugName,
-  //     debugPosMin,
-  //     debugPosMax,
-  //     debugRotMin,
-  //     debugRotMax,
-  //     debugPosStep,
-  //     debugRotStep,
-  //     debugFolder,
-  //   });
-  // }
   getVector3(a, b, c) {
     return new THREE.Vector3(a, b, c);
   }
