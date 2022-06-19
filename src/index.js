@@ -7,7 +7,7 @@ import "@fortawesome/fontawesome-free/js/solid";
 import "@fortawesome/fontawesome-free/js/regular";
 import "@fortawesome/fontawesome-free/js/brands";
 
-const debug = true;
+const debug = false;
 const mobileBreakPoint = 1000;
 const pi = Math.PI;
 let i;
@@ -106,52 +106,32 @@ const base = new Base({
   },
   debug: false,
 });
-base.frameRateDisplay("toggle", "paused");
+// base.frameRateDisplay("toggle", "paused");
 
 const apidict = {
-  photo1:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo2:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo3:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo4:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo5:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo1: "/resources/images/001.jpg",
+  photo2: "/resources/images/002.jpg",
+  photo3: "/resources/images/003.jpg",
+  photo4: "/resources/images/004.jpg",
+  photo5: "/resources/images/005.jpg",
   //
-  photo6:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo7:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo8:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo9:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo10:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo6: "/resources/images/006.jpg",
+  photo7: "/resources/images/007.jpg",
+  photo8: "/resources/images/008.jpg",
+  photo9: "/resources/images/009.jpg",
+  photo10: "/resources/images/010.jpg",
   //
-  photo11:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo12:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo13:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo14:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo15:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo11: "/resources/images/011.jpg",
+  photo12: "/resources/images/012.jpg",
+  photo13: "/resources/images/013.jpg",
+  photo14: "/resources/images/014.jpg",
+  photo15: "/resources/images/015.jpg",
   //
-  photo16:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo17:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo18:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo19:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
-  photo20:
-    "https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832__480.jpg",
+  photo16: "/resources/images/016.jpg",
+  photo17: "/resources/images/017.jpg",
+  photo18: "/resources/images/018.jpg",
+  photo19: "/resources/images/019.jpg",
+  photo20: "/resources/images/020.jpg",
 };
 
 // Create Room
@@ -208,8 +188,11 @@ const addPanel = (
     },
     {
       map: photo,
+      normalMap: "./resources/textures/wrinkle.jpg",
+      normalScale: [5, 5],
+      aoMap: "./resources/textures/wrinkleao.jpg",
       lightMap: "./resources/textures/white_box.png",
-      lightMapIntensity: 2.0,
+      lightMapIntensity: 0.0,
     },
     { debugFolder, debugName: `panel${n}` }
   );
@@ -295,7 +278,7 @@ if (window.innerWidth > mobileBreakPoint) {
     while (deIlluminationQueue.length > 0) {
       gsap.to(deIlluminationQueue.pop(), {
         duration: 0.35,
-        lightMapIntensity: 2.0,
+        lightMapIntensity: 0.0,
       });
     }
   };
@@ -363,9 +346,9 @@ document.addEventListener(
   "keydown",
   (e) => {
     switch (e.key) {
-      case "f":
-        base.frameRateDisplay("toggle", "paused");
-        break;
+      // case "f":
+      //   base.frameRateDisplay("toggle", "paused");
+      //   break;
       case "ArrowUp":
         tppcam.fov += 1;
         tppcam.updateProjectionMatrix();

@@ -7,9 +7,7 @@
     <link rel="prefetch" href="./resources/brands/linkedin.svg" />
     <link rel="prefetch" href="./resources/brands/pinterest.svg" />
     <link rel="prefetch" href="./resources/brands/twitter.svg" />
-    <link rel="prefetch"
-        href="https://s3.amazonaws.com/www-inside-design/uploads/2020/10/aspect-ratios-blogpost-1x1-1.png" />
-    <link rel="stylesheet" href="./resources/css/socials.css">
+    <link rel="prefetch" href="./resources/images/dp.jpg" />
     <link rel="stylesheet" href="./resources/css/loadingscreen.css">
     <style>
         *,
@@ -23,6 +21,54 @@
             position: fixed;
             left: 0;
             top: 0;
+        }
+    </style>
+    <!-- Socials -->
+    <style>
+        @keyframes bounce {
+            from {
+                transform: translateY(0px);
+            }
+
+            to {
+                transform: translateY(-15px);
+            }
+        }
+
+        @-webkit-keyframes bounce {
+            from {
+                transform: translateY(0px);
+            }
+
+            to {
+                transform: translateY(-15px);
+            }
+        }
+
+        div.socials>div {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 20rem;
+        }
+
+        div.social {
+            width: 2rem;
+            height: 2rem;
+            padding: 0.8rem;
+            border-radius: 9999999px;
+            transition: 0.4s;
+            display: flex;
+            justify-content: center;
+        }
+
+        div.social:hover {
+            transform: scale(1.3);
+            animation: bounce 0.2s infinite alternate;
+        }
+
+        div.social img {
+            width: 2rem;
         }
     </style>
     <!-- Fullscreen Button CSS -->
@@ -187,17 +233,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link type="preload" as="script" href="./worker.js">
     <script type="preload" src="./index.js"></script>
-    <title>Generic</title>
+    <title>Eyes-of-Abhinav</title>
 </head>
 
 <body>
 
     <!-- Loading Screen -->
     <div id="loading-screen-ui-container" class="loading-screen-ui-container" style="z-index:10;">
+
         <div class="logo-wrapper">
             <div style="display: flex; justify-content: center;">
                 <div class="avatar">
-                    <img src="https://s3.amazonaws.com/www-inside-design/uploads/2020/10/aspect-ratios-blogpost-1x1-1.png"
+                    <img src="./resources/images/dp.jpg"
                         alt="Avatar" />
                 </div>
             </div>
@@ -206,18 +253,32 @@
             </div>
         </div>
         <div class="bio">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sapiente tempore harum esse ea voluptates aliquid.
-            Mollitia, deserunt. Consectetur, quibusdam cupiditate aliquam accusantium minima numquam deleniti, itaque
-            mollitia nostrum aut corporis.
+            Hi, I am Abhinav, a content creator, videographer, video editor, concept artist, and logo designer. Welcome
+            to my website! While it loads help yourself to some of my best works by clicking on my socials below.
         </div>
         <div class="socials">
-            <div class="set rounded fg-inflate fg-tilt fg-shadow">
-                <a href="##" class="social facebook">Facebook</a>
-                <a href="##" class="social twitter">Twitter</a>
-                <a href="##" class="social google-plus">Google+</a>
-                <a href="##" class="social pinterest">Pinterest</a>
-                <a href="##" class="social instagram">Instagram</a>
-                <a href="##" class="social linked-in">LinkedIn</a>
+            <div>
+                <a href="##" class="social twitter">
+                    <div style="background-image: linear-gradient(rgb(12, 223, 205), rgb(32, 97, 219));" class="social">
+                        <img class="social" src="./resources/brands/twitter.svg" alt="Twitter Icon">
+                    </div>
+                </a>
+                <a href="##" class="social pinterest">
+                    <div style="background-image: linear-gradient(rgb(226, 187, 15), rgb(156, 24, 7));" class="social">
+                        <img class="social" src="./resources/brands/pinterest.svg" alt="Pinterest Icon">
+                    </div>
+                </a>
+                <a href="https://www.instagram.com/eyesofabhinav/" class="social instagram">
+                    <div style="background-image: linear-gradient(rgb(177, 17, 240), rgb(223, 19, 19));" class="social">
+                        <img class="social" src="./resources/brands/instagram.svg" alt="Instagram Icon">
+                    </div>
+                </a>
+                <a href="##" class="social linked-in">
+                    <div style="background-image: linear-gradient(rgb(14, 115, 231), rgb(21, 207, 207));"
+                        class="social">
+                        <img class="social" src="./resources/brands/linkedin.svg" alt="Linked-in Icon">
+                    </div>
+                </a>
             </div>
         </div>
 
@@ -241,14 +302,14 @@
     </div>
 
     <div id="image-view"
-        style="display: none; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; background-size: cover; transition: 0.5s; opacity: 0;">
+        style="display: none; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; background-size: cover; transition: 0.5s; opacity: 0; pointer-events: none; background-position: 50% 50%;">
     </div>
 
 
     <div class="image-view-close-button-container" id="image-view-close-container"
-        style="position: fixed; z-index: 3; right: 1rem; top: 0; display: none; text-align: center; transition: 0.5s; cursor: pointer;">
+        style="position: fixed; z-index: 3; right: 1rem; top: 2rem; display: none; text-align: center; transition: 0.5s; cursor: pointer;">
         <a class="image-view-close-button" id="image-view-close-button"
-            style="border-radius: 50%; display: inline-block;">
+            style="border-radius: 50%; display: inline-block; color: white; background-color: #1e1e1e;">
             <h1><i id="image-view-close" class="far fa-times-circle"></i></h1>
         </a>
     </div>
